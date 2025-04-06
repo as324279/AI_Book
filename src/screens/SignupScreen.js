@@ -23,6 +23,12 @@ export default function SignupScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
+      <Pressable 
+        style={styles.backButton} 
+        onPress={() => navigation.navigate('Start')}
+      >
+        <Text style={styles.backButtonText}>←</Text>
+      </Pressable>
       <Text style={styles.title}>회원가입</Text>
       <TextInput placeholder="Email" style={styles.input} onChangeText={setEmail} />
       <TextInput placeholder="Password" style={styles.input} secureTextEntry onChangeText={setPassword} />
@@ -50,4 +56,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   buttonText: { color: '#fff', fontWeight: 'bold' },
+  backButton: {
+    position: 'absolute',
+    top: 3,
+    left: 10,
+    padding: 5,
+  },
+  backButtonText: {
+    fontSize: 32,
+    color: '#6B4B39',
+    fontWeight: 'bold',
+  },
 });

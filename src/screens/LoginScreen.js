@@ -12,11 +12,18 @@ export default function LoginScreen({ navigation }) {
       return;
     }
     Alert.alert('로그인 성공!');
-    navigation.navigate('Start'); // 로그인 후 시작화면으로 이동
+    navigation.navigate('Main'); // 로그인 후 메인인화면으로 이동
   };
 
   return (
     <View style={styles.container}>
+      <Pressable 
+        style={styles.backButton} 
+        onPress={() => navigation.navigate('Start')}
+      >
+        <Text style={styles.backButtonText}>←</Text>
+      </Pressable>
+
       <Text style={styles.title}>로그인</Text>
       <TextInput
         placeholder="이메일"
@@ -56,4 +63,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   buttonText: { color: '#fff', fontWeight: 'bold' },
+  backButton: {
+    position: 'absolute',
+    top: 3,
+    left: 10,
+    padding: 5,
+  },
+  backButtonText: {
+    fontSize: 32,
+    color: '#6B4B39',
+    fontWeight: 'bold',
+  },
 });
