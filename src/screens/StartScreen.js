@@ -1,8 +1,11 @@
-// src/screens/StartScreen.tsx
+// src/screens/StartScreen.js
 import React from 'react';
 import { View, Text, Image, StyleSheet, Pressable } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 
 export default function StartScreen() {
+  const navigation = useNavigation();
+
   return (
     <View style={styles.container}>
       <Image
@@ -10,13 +13,12 @@ export default function StartScreen() {
         style={styles.logo}
         resizeMode="contain"
       />
-      <Text style={styles.title}>BOOKMARK</Text>
 
-      <Pressable style={styles.button}>
+      <Pressable style={styles.button} onPress={() => navigation.navigate('Login')}>
         <Text style={styles.buttonText}>로그인</Text>
       </Pressable>
 
-      <Pressable style={styles.button}>
+      <Pressable style={styles.button} onPress={() => navigation.navigate('Signup')}>
         <Text style={styles.buttonText}>회원가입</Text>
       </Pressable>
     </View>

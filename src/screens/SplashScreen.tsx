@@ -10,7 +10,6 @@ export default function SplashScreen() {
         style={styles.logo}
         resizeMode="contain"
       />
-      <Text style={styles.title}>BOOKMARK</Text>
       <Text style={styles.slogan}>읽고, 기록하고, 나누다!</Text>
       <Text style={styles.subtitle}>더 스마트한 독서 습관</Text>
     </View>
