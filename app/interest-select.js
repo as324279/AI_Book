@@ -58,7 +58,7 @@ export default function InterestSelectScreen() {
       });
       */
 
-      Alert.alert('관심 장르가 선택되었습니다!');
+      Alert.alert('회원가입 완료!');
       router.replace('/'); // 시작 화면으로 이동
     } catch (error) {
       console.error('Firestore 저장 오류:', error);

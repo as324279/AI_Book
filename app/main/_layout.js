@@ -35,7 +35,7 @@ export default function MainLayout() {
       />
       {/* 커뮤니티 탭 */}
       <Tabs.Screen 
-        name="community" 
+        name="community/index" 
         options={{
           title: '커뮤니티',
           tabBarLabel: '커뮤니티',
@@ -46,7 +46,7 @@ export default function MainLayout() {
       />
       {/* 챌린지 탭 */}
       <Tabs.Screen 
-        name="challenge" 
+        name="challenge/index" 
         options={{
           title: '챌린지',
           tabBarLabel: '챌린지',
@@ -57,7 +57,7 @@ export default function MainLayout() {
       />
       {/* 프로필 탭 */}
       <Tabs.Screen 
-        name="profile" 
+        name="profile/index" 
         options={{
           title: '계정',
           tabBarLabel: '계정',
@@ -66,6 +66,15 @@ export default function MainLayout() {
           ),
         }}
       />
+
+      <Tabs.Screen name="profile/genre-edit" options={{ href: null }} />
+      <Tabs.Screen name="profile/edit-info" options={{ href: null }} />
+      <Tabs.Screen name="profile/library" options={{ href: null }} />
+      <Tabs.Screen name="profile/interest-edit" options={{ href: null }} /> 
+      <Tabs.Screen name="community/post" options={{ href: null }} />
+      <Tabs.Screen name="community/write" options={{ href: null }} />
+      <Tabs.Screen name="challenge/detail" options={{ href: null }} />
+      <Tabs.Screen name="challenge/create" options={{ href: null }} />
     </Tabs>
   );
 } 
