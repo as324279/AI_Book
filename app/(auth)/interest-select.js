@@ -5,7 +5,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 // import { firestore } from '../firebase';
 // import { doc, setDoc } from 'firebase/firestore';
 import { getDatabase, ref, update } from "firebase/database";
-import app from '../firebase/firebase';
+import app from '../../firebase/firebase.client';
 
 
 const GENRES = [
@@ -20,7 +20,7 @@ const GENRES = [
   '자기 계발',
 ];
 
-export default function InterestSelectScreen() {
+const InterestSelectScreen = ()=> {
   const router = useRouter();
   const { uid } = useLocalSearchParams();
 
@@ -111,7 +111,8 @@ export default function InterestSelectScreen() {
       </Pressable>
     </View>
   );
-}
+};
+export default InterestSelectScreen;
 
 const styles = StyleSheet.create({
   container: {

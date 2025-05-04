@@ -5,7 +5,7 @@ import { useRouter } from 'expo-router';
 import CustomHeader from '../../../components/CustomHeader';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
-export default function ChallengeScreen() {
+const ChallengeScreen = ()=> {
   const router = useRouter();
 
   // 임시 챌린지 데이터
@@ -23,7 +23,7 @@ export default function ChallengeScreen() {
         {/* 현재 진행 중인 챌린지 카드 */}
         <Pressable 
           style={styles.challengeCard}
-          onPress={() => router.push('/main/challenge/detail')}
+          onPress={() => router.push('../../(screen)/challenge/Detail')}
         >
           <Text style={styles.challengeTitle}>{currentChallenge.title}</Text>
           <View style={styles.progressContainer}>
@@ -33,7 +33,7 @@ export default function ChallengeScreen() {
           <Text style={styles.daysLeft}>{currentChallenge.daysLeft}</Text>
           <Pressable 
             style={styles.detailButton}
-            onPress={() => router.push('/main/challenge/detail')}
+            onPress={() => router.push('../../(screen)/challenge/Detail')}
           >
             <Text style={styles.detailButtonText}>챌린지 상세보기</Text>
           </Pressable>
@@ -42,7 +42,7 @@ export default function ChallengeScreen() {
         {/* 새로운 챌린지 생성 버튼 */}
         <Pressable 
           style={styles.newChallengeButton}
-          onPress={() => router.push('/main/challenge/create')}
+          onPress={() => router.push('../../(screen)/challenge/Create')}
         >
           <MaterialIcons name="add-circle" size={24} color="#6B4B39" />
           <Text style={styles.newChallengeText}>새로운 챌린지 생성</Text>
@@ -50,7 +50,8 @@ export default function ChallengeScreen() {
       </ScrollView>
     </SafeAreaView>
   );
-}
+};
+export default ChallengeScreen;
 
 const styles = StyleSheet.create({
   safeArea: {

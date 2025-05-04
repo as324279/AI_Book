@@ -3,12 +3,13 @@ import { View, Text, TextInput, StyleSheet, Pressable, Alert } from "react-nativ
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { getAuth, EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
-import app from "../../../firebase/firebase";
+import app from "../../../firebase/firebase.client";
 import CustomHeader from "../../../components/CustomHeader";
+
 
 const PasswordCheckScreen = ()=> {
   const router = useRouter();
-  const auth = getAuth(app);
+  // const auth = getAuth(app);
   const [currentPassword, setCurrentPassword] = useState("");
 
   const handlePasswordCheck = async () => {
@@ -23,7 +24,7 @@ const PasswordCheckScreen = ()=> {
       await reauthenticateWithCredential(user, credential);
       
       // 성공 → edit-info로 이동
-      router.push("/main/profile/edit-info");
+      router.push("../../(screen)/profile/Edit-info");
     } catch (error) {
       if (error.code === 'auth/wrong-password') {
         Alert.alert("오류", "비밀번호가 틀렸습니다.");

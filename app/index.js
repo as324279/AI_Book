@@ -4,10 +4,12 @@ import React from 'react';
 import { View, Text, Image, StyleSheet, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 
-export default function StartScreen() {
+
+
+const StartScreen = ()=> {
   // Expo Router의 useRouter 훅을 사용하여 화면 간 이동을 관리합니다.
   const router = useRouter();
-
+  
   return (
     <View style={styles.container}>
       {/* 앱 로고 이미지 */}
@@ -17,16 +19,17 @@ export default function StartScreen() {
         resizeMode="contain"
       />
       {/* 로그인 버튼 - 클릭 시 로그인 화면으로 이동 */}
-      <Pressable style={styles.button} onPress={() => router.push('/login')}>
+      <Pressable style={styles.button} onPress={() => router.push('./(auth)/login')}>
         <Text style={styles.buttonText}>로그인</Text>
       </Pressable>
       {/* 회원가입 버튼 - 클릭 시 회원가입 화면으로 이동 */}
-      <Pressable style={styles.button} onPress={() => router.push('/signup')}>
+      <Pressable style={styles.button} onPress={() => router.push('./(auth)/signup')}>
         <Text style={styles.buttonText}>회원가입</Text>
       </Pressable>
     </View>
   );
-}
+};
+export default StartScreen;
 
 // 스타일 정의
 const styles = StyleSheet.create({

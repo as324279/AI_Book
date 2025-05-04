@@ -6,7 +6,7 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
 
 //각자 개인의 와이파이 주소로 사용 -> 핸드폰과 노트북 와이파이가 일치해야 함.
-const EXPRESS_SERVER_URL = 'http://192.168.219.105:5000';
+const EXPRESS_SERVER_URL = 'http://192.168.219.103:5000';
 
 const CameraScreen = () => {
   const { imageUri } = useLocalSearchParams();
@@ -46,7 +46,7 @@ const CameraScreen = () => {
   return (
     <View style = {styles.screen}>
       <View style = {styles.header}>
-        <Pressable onPress = {()=>router.replace('/main/MainHome')}>
+        <Pressable onPress = {()=>router.replace('../(screen)/MainHome')}>
         <MaterialIcons  name = "arrow-back-ios" size = {20} color = '#000'/>
         </Pressable>
 

@@ -5,23 +5,23 @@ import { useRouter } from 'expo-router';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { getDatabase, ref, onValue, query, orderByChild } from "firebase/database";
 import { getAuth } from "firebase/auth";
-import app from "../../../firebase/firebase";
-
-function formatDate(ts) {
-  const d = new Date(ts);
-  const MM = (d.getMonth() + 1).toString().padStart(2, '0');
-  const DD = d.getDate().toString().padStart(2, '0');
-  const hh = d.getHours().toString().padStart(2, '0');
-  const mm = d.getMinutes().toString().padStart(2, '0');
-  return `${MM}/${DD} ${hh}:${mm}`;
-}
+import app from "../../../firebase/firebase.client";
 
 const CommunityScreen = ()=> {
   const router = useRouter();
   const [posts, setPosts] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('추천');
   const categories = ['추천', '자유', '리뷰'];
-  const auth = getAuth(app);
+  // const auth = getAuth(app);
+
+  function formatDate(ts) {
+    const d = new Date(ts);
+    const MM = (d.getMonth() + 1).toString().padStart(2, '0');
+    const DD = d.getDate().toString().padStart(2, '0');
+    const hh = d.getHours().toString().padStart(2, '0');
+    const mm = d.getMinutes().toString().padStart(2, '0');
+    return `${MM}/${DD} ${hh}:${mm}`;
+  }
 
   useEffect(() => {
     const db = getDatabase(app);
@@ -69,7 +69,7 @@ const CommunityScreen = ()=> {
               style={styles.postCard}
               onPress={() =>
                 router.push({
-                  pathname: '/main/community/post',
+                  pathname: '../../(screen)/community/Post',
                   params: { postId: post.id }
                 })
               }
@@ -101,7 +101,7 @@ const CommunityScreen = ()=> {
             </Pressable>
           ))}
       </ScrollView>
-      <Pressable style={styles.writeButton} onPress={() => router.push('/main/community/write')}>
+      <Pressable style={styles.writeButton} onPress={() => router.push('../../(screen)/community/Write')}>
         <MaterialIcons name="edit" size={28} color="#FFF" />
       </Pressable>
     </SafeAreaView>

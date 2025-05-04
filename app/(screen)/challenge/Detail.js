@@ -8,7 +8,7 @@ import { useRouter } from "expo-router";
 
 const screenWidth = Dimensions.get('window').width;
 
-export default function ChallengeDetailScreen() {
+const ChallengeDetailScreen = ()=> {
     const router = useRouter();
   const challengeDetails = {
     title: '초급 난이도',
@@ -21,7 +21,7 @@ export default function ChallengeDetailScreen() {
 
   useEffect(() => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-      router.push('/main/challenge');
+      router.push('../../(screen)/Challenge');
       return true;
     });
 
@@ -96,7 +96,8 @@ export default function ChallengeDetailScreen() {
       </ScrollView>
     </SafeAreaView>
   );
-}
+};
+export default ChallengeDetailScreen;
 
 const styles = StyleSheet.create({
   safeArea: {

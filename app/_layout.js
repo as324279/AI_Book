@@ -3,7 +3,7 @@ import { useColorScheme } from 'react-native';
 import { useFonts } from 'expo-font';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-export default function Layout() {
+const Layout = ()=> {
   const colorScheme = useColorScheme();
 
   const [loaded] = useFonts({
@@ -27,4 +27,5 @@ export default function Layout() {
     />
     </SafeAreaProvider>
   );
-}
+};
+export default Layout;

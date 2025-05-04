@@ -5,9 +5,9 @@ import { useRouter } from "expo-router";
 import CustomHeader from "../../../components/CustomHeader";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { getDatabase, ref, onValue } from "firebase/database";
-import app from "../../../firebase/firebase";
+import app from "../../../firebase/firebase.client";
 
-export default function GenreEditScreen() {
+const  GenreEditScreen = ()=> {
   const router = useRouter();
   const [uid, setUid] = useState(null);
   const [currentGenres, setCurrentGenres] = useState([]);
@@ -15,7 +15,7 @@ export default function GenreEditScreen() {
 
   // 1. 로그인된 유저의 uid 가져오기
   useEffect(() => {
-    const auth = getAuth(app);
+    // const auth = getAuth(app);
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         setUid(user.uid);
@@ -48,7 +48,7 @@ export default function GenreEditScreen() {
   // 3. 뒤로가기 핸들러
   useEffect(() => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-      router.push('/main/profile');
+      router.push('../../(screen)/profile');
       return true;
     });
     return () => backHandler.remove();
@@ -76,7 +76,7 @@ export default function GenreEditScreen() {
         )}
         <Pressable
           style={styles.button}
-          onPress={() => router.push("/main/profile/interest-edit")}
+          onPress={() => router.push("../../(screen)/profile/Interest-edit")}
         >
           <Text style={styles.buttonText}>장르 다시 선택하기</Text>
         </Pressable>
@@ -84,6 +84,7 @@ export default function GenreEditScreen() {
     </SafeAreaView>
   );
 }
+export default GenreEditScreen;
 
 const styles = StyleSheet.create({
   safeArea: {

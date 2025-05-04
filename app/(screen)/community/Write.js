@@ -6,20 +6,20 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import * as ImagePicker from 'expo-image-picker';
 import { getDatabase, ref, get, push, set } from "firebase/database";
 import { getAuth } from "firebase/auth";
-import app from "../../../firebase/firebase";
+import app from "../../../firebase/firebase.client"
 
-export default function WritePostScreen() {
+const WritePostScreen = ()=> {
   const router = useRouter();
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [image, setImage] = useState(null);
   const [category, setCategory] = useState('자유');
   const categories = ['추천', '자유', '리뷰'];
-  const auth = getAuth(app);
+  // const auth = getAuth(app);
 
   useEffect(() => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-      router.push('/main/community');
+      router.push('../../(screen)/community');
       return true;
     });
     return () => backHandler.remove();
@@ -50,7 +50,7 @@ export default function WritePostScreen() {
     }
     try {
       const db = getDatabase(app);
-      const auth = getAuth(app);
+      // const auth = getAuth(app);
       const userRef = ref(db, `users/${auth.currentUser.uid}`);
       const userSnap = await get(userRef);
       const nickname = userSnap.val()?.nickname || '알 수 없음';
@@ -71,7 +71,7 @@ export default function WritePostScreen() {
         timestamp: Date.now()
       });
       Alert.alert('성공', '게시글이 등록되었습니다!');
-      router.push('/main/community');
+      router.push('../../(screen)/community');
     } catch (error) {
       Alert.alert('오류', error.message);
     }
@@ -111,6 +111,7 @@ export default function WritePostScreen() {
     </SafeAreaView>
   );
 }
+export default WritePostScreen;
 
 const styles = StyleSheet.create({
   safeArea: {

@@ -4,7 +4,7 @@ import { Tabs } from 'expo-router';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { Ionicons } from '@expo/vector-icons';
 
-export default function MainLayout() {
+const MainLayout = ()=> {
   return (
     <Tabs
       screenOptions={{
@@ -36,7 +36,7 @@ export default function MainLayout() {
       />
       {/* 커뮤니티 탭 */}
       <Tabs.Screen 
-        name="community/index" 
+        name="community" 
         options={{
           title: '커뮤니티',
           tabBarLabel: '커뮤니티',
@@ -47,7 +47,7 @@ export default function MainLayout() {
       />
       {/* 챌린지 탭 */}
       <Tabs.Screen 
-        name="challenge/index"
+        name="challenge"
         options={{
           title: '챌린지',
           tabBarLabel: '챌린지',
@@ -58,7 +58,7 @@ export default function MainLayout() {
       />
       {/* 프로필 탭 */}
       <Tabs.Screen 
-        name="profile/index" 
+        name="profile" 
         options={{
           title: '계정',
           tabBarLabel: '계정',
@@ -68,19 +68,20 @@ export default function MainLayout() {
         }}
       />
 
-      <Tabs.Screen name="profile/genre-edit" options={{ href: null }} />
-      <Tabs.Screen name="profile/edit-info" options={{ href: null }} />
-      <Tabs.Screen name="profile/library" options={{ href: null }} />
-      <Tabs.Screen name="profile/interest-edit" options={{ href: null }} /> 
-      <Tabs.Screen name="profile/pw-check" options={{href: null}} />
-      <Tabs.Screen name="community/post" options={{ href: null }} />
-      <Tabs.Screen name="community/write" options={{ href: null }} />
-      <Tabs.Screen name="challenge/detail" options={{ href: null }} />
-      <Tabs.Screen name="challenge/create" options={{ href: null }} />
+      <Tabs.Screen name="(screen)/profile/Genre-edit" options={{ href: null }} />
+      <Tabs.Screen name="(screen)/profile/Edit-info" options={{ href: null }} />
+      <Tabs.Screen name="(screen)/profile/Library" options={{ href: null }} />
+      <Tabs.Screen name="(screen)/profile/Interest-edit" options={{ href: null }} /> 
+      <Tabs.Screen name="(screen)/profile/Pw-check" options={{href: null}} />
+      <Tabs.Screen name="(screen)/community/Post" options={{ href: null }} />
+      <Tabs.Screen name="(screen)/community/Write" options={{ href: null }} />
+      <Tabs.Screen name="(screen)/challenge/Detail" options={{ href: null }} />
+      <Tabs.Screen name="(screen)/challenge/Create" options={{ href: null }} />
       <Tabs.Screen name="(screen)/CameraScreen" options={{ href: null }} />
       <Tabs.Screen name="(screen)/BookSearch" options={{ href: null }} />
       <Tabs.Screen name="(screen)/BookDetail" options={{ href: null }} />
       <Tabs.Screen name="index" options={{ href: null }} />
     </Tabs>
   );
-} 
+};
+export default MainLayout;

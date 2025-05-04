@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import CustomHeader from '../../../components/CustomHeader';
 
-export default function CreateChallengeScreen() {
+const CreateChallengeScreen = ()=> {
   const router = useRouter();
   const [selectedLevel, setSelectedLevel] = useState('초급');
   const [objective, setObjective] = useState('');
@@ -14,7 +14,7 @@ export default function CreateChallengeScreen() {
 
   useEffect(() => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-      router.push('/main/challenge');
+      router.push('../../(screen)/challenge');
       return true;
     });
 
@@ -62,7 +62,8 @@ export default function CreateChallengeScreen() {
       </View>
     </SafeAreaView>
   );
-}
+};
+export default CreateChallengeScreen;
 
 const styles = StyleSheet.create({
   safeArea: {

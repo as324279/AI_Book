@@ -14,11 +14,11 @@ import {
   onAuthStateChanged
 } from "firebase/auth";
 import { getDatabase, ref, get, update } from "firebase/database";
-import app from "../../../firebase/firebase";
+import app from "../../../firebase/firebase.client";
 
-export default function EditInfoScreen() {
+const EditInfoScreen = ()=> {
   const router = useRouter();
-  const auth = getAuth(app);
+  // const auth = getAuth(app);
   
   // 현재 사용자 정보 상태
   const [userInfo, setUserInfo] = useState({
@@ -180,7 +180,7 @@ export default function EditInfoScreen() {
 
   useEffect(() => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-      router.push('/main/profile');
+      router.push('../../(screen)/profile');
       return true;
     });
 
@@ -273,6 +273,7 @@ export default function EditInfoScreen() {
     </SafeAreaView>
   );
 }
+export default EditInfoScreen;
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: "#FEF6F0" },

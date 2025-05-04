@@ -4,12 +4,12 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import CustomHeader from "../../../components/CustomHeader";
 import { useRouter } from "expo-router";
 
-export default function LibraryScreen() {
+const LibraryScreen = ()=> {
   const router = useRouter();
 
   useEffect(() => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-      router.push('/main/profile');
+      router.push('../../(screen)/profile');
       return true;
     });
 
@@ -30,6 +30,7 @@ export default function LibraryScreen() {
     </SafeAreaView>
   );
 }
+export default LibraryScreen;
 
 const styles = StyleSheet.create({
   safeArea: {

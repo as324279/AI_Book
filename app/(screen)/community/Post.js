@@ -5,7 +5,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { getDatabase, ref, onValue, update, push, remove, get } from "firebase/database";
 import { getAuth } from "firebase/auth";
-import app from "../../../firebase/firebase";
+import app from "../../../firebase/firebase.client"
 
 function formatDate(ts) {
   const d = new Date(ts);
@@ -16,18 +16,18 @@ function formatDate(ts) {
   return `${MM}/${DD} ${hh}:${mm}`;
 }
 
-export default function PostDetailScreen() {
+const PostDetailScreen = ()=> {
   const router = useRouter();
   const { postId } = useLocalSearchParams();
   const [showOptions, setShowOptions] = useState(false);
   const [comment, setComment] = useState('');
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
-  const auth = getAuth(app);
+  // const auth = getAuth(app);
 
   useEffect(() => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-      router.push('/main/community');
+      router.push('../../(screen)/community');
       return true;
     });
     return () => backHandler.remove();
@@ -76,7 +76,7 @@ export default function PostDetailScreen() {
         const db = getDatabase(app);
         await remove(ref(db, `posts/${postId}`));
         Alert.alert('알림', '게시글이 삭제되었습니다.');
-        router.push('/main/community');
+        router.push('../../(screen)/community');
       }}
     ]);
   };
@@ -246,7 +246,8 @@ export default function PostDetailScreen() {
       </View>
     </SafeAreaView>
   );
-}
+};
+export default PostDetailScreen;
 
 const styles = StyleSheet.create({
   safeArea: {

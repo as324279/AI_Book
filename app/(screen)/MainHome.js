@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import './CameraScreen'
 
 const MainHome = () =>{
 
@@ -25,7 +26,7 @@ const MainHome = () =>{
     
             //  촬영된 이미지 경로 CameraScreen화면으로 넘기기
             router.push({
-              pathname: '/(screen)/CameraScreen',
+              pathname: './CameraScreen',
               params: { imageUri: processedImage.uri },
             });
           }
@@ -42,7 +43,7 @@ const MainHome = () =>{
           <View style = {styles.headerLeft}>
             <Text style = {styles.Title}>BookMark</Text>
           </View>
-          <Pressable style={styles.headerRight} onPress={() => router.replace('/(screen)/BookSearch')}>
+          <Pressable style={styles.headerRight} onPress={() => router.replace('./BookSearch')}>
             <MaterialIcons name='search' size={20} color='black' style={{ marginRight: 1 }} />
           </Pressable>
           <MaterialIcons name = 'menu' size = {20} color = "black"/>

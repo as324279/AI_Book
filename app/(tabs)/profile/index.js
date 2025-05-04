@@ -4,7 +4,8 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import CustomHeader from '../../../components/CustomHeader';
 
-export default function ProfileScreen() {
+
+const ProfileScreen = ()=> {
   const router = useRouter();
 
   // 로그아웃 버튼 눌렀을 때
@@ -38,7 +39,7 @@ export default function ProfileScreen() {
         {/* 관심 장르 관리 버튼 */}
         <Pressable
           style={styles.button}
-          onPress={() => router.push('/main/profile/genre-edit')}
+          onPress={() => router.push('../../(screen)/profile/Genre-edit')}
         >
           <Text style={styles.buttonText}>관심 장르 관리</Text>
         </Pressable>
@@ -46,7 +47,7 @@ export default function ProfileScreen() {
         {/* 내 정보 수정 */}
         <Pressable
           style={styles.button}
-          onPress={() => router.push('/main/profile/pw-check')}
+          onPress={() => router.push('../../(screen)/profile/Pw-check')}
         >
           <Text style={styles.buttonText}>내 정보 수정</Text>
         </Pressable>
@@ -54,7 +55,7 @@ export default function ProfileScreen() {
         {/* 내 서재 이동 */}
         <Pressable
           style={styles.button}
-          onPress={() => router.push('/main/profile/library')}
+          onPress={() => router.push('../../(screen)/profile/Library')}
         >
           <Text style={styles.buttonText}>내 서재</Text>
         </Pressable>
@@ -69,7 +70,8 @@ export default function ProfileScreen() {
       </View>
     </SafeAreaView>
   );
-}
+};
+export default ProfileScreen;
 
 const styles = StyleSheet.create({
   safeArea: {

@@ -5,13 +5,13 @@ import CustomHeader from "../../../components/CustomHeader";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import DropDownPicker from 'react-native-dropdown-picker';
 import { getDatabase, ref, onValue, update } from "firebase/database";
-import app from "../../../firebase/firebase";
+import app from "../../../firebase/firebase.client";
 import { getAuth } from "firebase/auth";
 
-export default function InterestEditScreen() {
+const InterestEditScreen = ()=> {
   const router = useRouter();
   const { uid } = useLocalSearchParams();
-  const auth = getAuth(app);
+  // const auth = getAuth(app);
   
   // 현재 사용자 uid 가져오기
   const [currentUid, setCurrentUid] = useState(uid || auth.currentUser?.uid);
@@ -73,7 +73,7 @@ export default function InterestEditScreen() {
 
   useEffect(() => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-      router.push('/main/profile');
+      router.push('../../(screen)/profile');
       return true;
     });
 
@@ -96,7 +96,7 @@ export default function InterestEditScreen() {
       const db = getDatabase(app);
       await update(ref(db, `users/${currentUid}`), { genres: [genre1, genre2, genre3] });
       Alert.alert('알림', '관심 장르가 업데이트되었습니다!');
-      router.push('/main/profile/genre-edit');
+      router.push('../../(screen)/profile/Genre-edit');
     } catch (error) {
       Alert.alert('오류', error.message);
     }
@@ -178,6 +178,7 @@ export default function InterestEditScreen() {
     </SafeAreaView>
   );
 }
+export default InterestEditScreen;
 
 const styles = StyleSheet.create({
   safeArea: {

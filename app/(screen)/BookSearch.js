@@ -12,6 +12,7 @@ import {
 import axios from 'axios';
 import { Ionicons,MaterialIcons } from '@expo/vector-icons'; 
 import { useRouter } from 'expo-router';
+ 
 
 
 const BookSearchScreen = ()=> {
@@ -26,7 +27,7 @@ const BookSearchScreen = ()=> {
       return;
     }
     try {
-        const url = `http://192.168.219.105:5000/search-books?q=${encodeURIComponent(query)}`;
+        const url = `http://192.168.219.103:5000/search-books?q=${encodeURIComponent(query)}`;
         const response = await axios.get(url);
         // console.log("📦 받아온 응답:", response.data);
         // console.log("📚 books 배열:", response.data.books);
@@ -58,7 +59,7 @@ const BookSearchScreen = ()=> {
 
   return (
     <View style = {styles.container}>
-        <Pressable onPress = {()=>router.replace('/MainHome')}>
+        <Pressable onPress = {()=>router.replace('./MainHome')}>
             <MaterialIcons  name = "arrow-back-ios" size = {20} color = '#000'/>
         </Pressable>
         <Text style={styles.title}>📚 BookMark</Text>  

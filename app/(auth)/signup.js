@@ -3,7 +3,7 @@ import { View, Text, TextInput, StyleSheet, Pressable, Alert } from 'react-nativ
 import { useRouter } from 'expo-router';
 import { getAuth, createUserWithEmailAndPassword, sendEmailVerification, onAuthStateChanged } from "firebase/auth";
 import { getDatabase, ref, set, get } from "firebase/database";
-import app from '../firebase/firebase'
+import app from '../../firebase/firebase.client'
 
 const SignupScreen = ()=> {
   const [nickname, setNickname] = useState('');
@@ -86,7 +86,7 @@ const SignupScreen = ()=> {
     }
     // 장르 선택 화면으로 UID 전달
     router.push({
-      pathname: '/interest-select',
+      pathname: '/(auth)/Interest-select',
       params: { uid }
     });
   };
@@ -164,7 +164,7 @@ const SignupScreen = ()=> {
       </Pressable>
     </View>
   );
-}
+};
 export default SignupScreen;
 
 const styles = StyleSheet.create({
