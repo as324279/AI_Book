@@ -11,7 +11,7 @@ import { getAuth } from "firebase/auth";
 const InterestEditScreen = ()=> {
   const router = useRouter();
   const { uid } = useLocalSearchParams();
-  // const auth = getAuth(app);
+   const auth = getAuth(app);
   
   // 현재 사용자 uid 가져오기
   const [currentUid, setCurrentUid] = useState(uid || auth.currentUser?.uid);

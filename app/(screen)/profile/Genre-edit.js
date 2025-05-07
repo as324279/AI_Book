@@ -15,7 +15,7 @@ const  GenreEditScreen = ()=> {
 
   // 1. 로그인된 유저의 uid 가져오기
   useEffect(() => {
-    // const auth = getAuth(app);
+     const auth = getAuth(app);
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         setUid(user.uid);

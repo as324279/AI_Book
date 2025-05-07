@@ -140,7 +140,7 @@ export default function LoginScreen() {
         return;
       }
       Alert.alert('로그인 성공!');
-      router.replace('../(screen)/MainHome');
+      router.replace('../(tabs)/MainHome');
     } catch (error) {
       Alert.alert('로그인 실패', error.message);
     }

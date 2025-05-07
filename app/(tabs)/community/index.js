@@ -12,7 +12,7 @@ const CommunityScreen = ()=> {
   const [posts, setPosts] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('추천');
   const categories = ['추천', '자유', '리뷰'];
-  // const auth = getAuth(app);
+   const auth = getAuth(app);
 
   function formatDate(ts) {
     const d = new Date(ts);

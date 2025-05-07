@@ -23,7 +23,7 @@ const PostDetailScreen = ()=> {
   const [comment, setComment] = useState('');
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
-  // const auth = getAuth(app);
+   const auth = getAuth(app);
 
   useEffect(() => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {

@@ -60,6 +60,13 @@ const ProfileScreen = ()=> {
           <Text style={styles.buttonText}>내 서재</Text>
         </Pressable>
 
+        <Pressable
+          style={styles.button}
+          onPress={() => router.push('../../(screen)/profile/Recommend')}
+        >
+          <Text style={styles.buttonText}>추천 도서 목록</Text>
+        </Pressable>
+
         {/* 로그아웃 버튼 */}
         <Pressable
           style={[styles.button, styles.logoutButton]}

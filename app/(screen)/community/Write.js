@@ -15,7 +15,7 @@ const WritePostScreen = ()=> {
   const [image, setImage] = useState(null);
   const [category, setCategory] = useState('자유');
   const categories = ['추천', '자유', '리뷰'];
-  // const auth = getAuth(app);
+   const auth = getAuth(app);
 
   useEffect(() => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
@@ -50,7 +50,7 @@ const WritePostScreen = ()=> {
     }
     try {
       const db = getDatabase(app);
-      // const auth = getAuth(app);
+     const auth = getAuth(app);
       const userRef = ref(db, `users/${auth.currentUser.uid}`);
       const userSnap = await get(userRef);
       const nickname = userSnap.val()?.nickname || '알 수 없음';

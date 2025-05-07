@@ -27,7 +27,7 @@ const BookSearchScreen = ()=> {
       return;
     }
     try {
-        const url = `http://192.168.219.103:5000/search-books?q=${encodeURIComponent(query)}`;
+        const url = `http://192.168.219.101:5000/search-books?q=${encodeURIComponent(query)}`;
         const response = await axios.get(url);
         // console.log("📦 받아온 응답:", response.data);
         // console.log("📚 books 배열:", response.data.books);

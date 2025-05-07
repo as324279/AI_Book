@@ -9,26 +9,49 @@ const CreateChallengeScreen = ()=> {
   const [selectedLevel, setSelectedLevel] = useState('초급');
   const [objective, setObjective] = useState('');
   const [duration, setDuration] = useState(4);
+  const [challengeResult, setChallengeResult] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const levels = ['초급', '중급', '고급'];
+
+  const level = ['초급', '중급', '고급'];
 
   useEffect(() => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-      router.push('../../(screen)/challenge');
+      router.push('../../(screen)/challenge/Detail');
       return true;
     });
 
     return () => backHandler.remove();
   }, []);
 
-  const handleCreate = () => {
-    if (!objective.trim()) {
-      Alert.alert('알림', '목표가 생성되었습니다.');
-      return;
+  const generateChallenge = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('http://192.168.219.101:5000/generate-challenge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ level: selectedLevel }),
+      });
+
+  
+      const data = await response.json();
+      setChallengeResult(data.result);
+      setLoading(false);
+      console.log(selectedLevel, data.result);
+      router.push({
+        pathname:'../challenge/Challenge',
+        params:{
+        level:selectedLevel,
+        result: encodeURIComponent(data.result), 
+        },
+      })
+    } catch (error) {
+      setLoading(false);
+      console.error('Error:', error);
+      setChallengeResult('서버 오류가 발생했습니다.');
     }
-    // TODO: 챌린지 생성 로직 구현
-    router.back();
   };
+
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -38,7 +61,7 @@ const CreateChallengeScreen = ()=> {
         <Text style={styles.sectionTitle}>🔥 초급 난이도</Text>
         
         <View style={styles.levelContainer}>
-          {levels.map((level) => (
+          {level.map((level) => (
             <Pressable
               key={level}
               style={[
@@ -56,7 +79,7 @@ const CreateChallengeScreen = ()=> {
             </Pressable>
           ))}
         </View>
-        <Pressable style={styles.createButton} onPress={handleCreate}>
+        <Pressable style={styles.createButton} onPress={generateChallenge}>
           <Text style={styles.createButtonText}>챌린지 시작하기</Text>
         </Pressable>
       </View>

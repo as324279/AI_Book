@@ -18,7 +18,7 @@ import app from "../../../firebase/firebase.client";
 
 const EditInfoScreen = ()=> {
   const router = useRouter();
-  // const auth = getAuth(app);
+   const auth = getAuth(app);
   
   // 현재 사용자 정보 상태
   const [userInfo, setUserInfo] = useState({

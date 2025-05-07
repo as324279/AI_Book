@@ -9,7 +9,7 @@ import CustomHeader from "../../../components/CustomHeader";
 
 const PasswordCheckScreen = ()=> {
   const router = useRouter();
-  // const auth = getAuth(app);
+   const auth = getAuth(app);
   const [currentPassword, setCurrentPassword] = useState("");
 
   const handlePasswordCheck = async () => {

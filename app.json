@@ -9,7 +9,7 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
-      "jsEngine": "jsc"       
+      "jsEngine": "hermes"       
     },
     "android": {
       "adaptiveIcon": {
@@ -17,7 +17,7 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "jsEngine": "jsc"       
+      "jsEngine": "hermes"       
     },
     "web": {
       "bundler": "metro",

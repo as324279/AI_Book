@@ -86,7 +86,7 @@ const SignupScreen = ()=> {
     }
     // 장르 선택 화면으로 UID 전달
     router.push({
-      pathname: '/(auth)/Interest-select',
+      pathname: './interest-select',
       params: { uid }
     });
   };
