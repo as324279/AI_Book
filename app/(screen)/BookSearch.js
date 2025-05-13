@@ -1,17 +1,17 @@
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import axios from 'axios';
+import { useRouter } from 'expo-router';
 import React, { useState, } from 'react';
 import {
-  View,
+  Image,
+  Pressable,
+  ScrollView,
+  StyleSheet,
   Text,
   TextInput,
-  ScrollView,
   TouchableOpacity,
-  Image,
-  StyleSheet,
-  Pressable
+  View
 } from 'react-native';
-import axios from 'axios';
-import { Ionicons,MaterialIcons } from '@expo/vector-icons'; 
-import { useRouter } from 'expo-router';
  
 
 
@@ -27,7 +27,7 @@ const BookSearchScreen = ()=> {
       return;
     }
     try {
-        const url = `http://192.168.219.101:5000/search-books?q=${encodeURIComponent(query)}`;
+        const url = `http://211.108.99.224:5000/search-books?q=${encodeURIComponent(query)}`;
         const response = await axios.get(url);
         // console.log("📦 받아온 응답:", response.data);
         // console.log("📚 books 배열:", response.data.books);

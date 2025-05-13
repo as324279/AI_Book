@@ -1,285 +1,248 @@
-import React, { useState, useEffect } from "react";
-import { View, Text, TextInput, StyleSheet, Pressable, BackHandler, Alert, ActivityIndicator } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import CustomHeader from "../../../components/CustomHeader";
 import { useRouter } from "expo-router";
 import {
   getAuth,
-  updateEmail,
+  onAuthStateChanged,
   updatePassword,
-  sendEmailVerification,
-  verifyBeforeUpdateEmail,
-  reauthenticateWithCredential,
-  EmailAuthProvider,
-  onAuthStateChanged
+  verifyBeforeUpdateEmail
 } from "firebase/auth";
-import { getDatabase, ref, get, update } from "firebase/database";
+import { get, getDatabase, ref, update } from "firebase/database";
+import React, { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  BackHandler,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import app from "../../../firebase/firebase.client";
 
-const EditInfoScreen = ()=> {
+export default function EditInfoScreen() {
   const router = useRouter();
-   const auth = getAuth(app);
-  
-  // 현재 사용자 정보 상태
-  const [userInfo, setUserInfo] = useState({
-    nickname: "",
-    email: "",
-  });
-  
-  // 새로운 정보 입력 상태
-  const [newInfo, setNewInfo] = useState({
-    nickname: "",
-    email: "",
-    password: "",
-    confirm: "",
-    currentPassword: "", // 현재 비밀번호 확인용
-  });
-  
-  const [loading, setLoading] = useState(true);
-  const [isEmailSent, setIsEmailSent] = useState(false);
-  const [isVerified, setIsVerified] = useState(false);
+  const auth = getAuth(app);
 
-  // Firebase에서 사용자 정보 불러오기
+  // 상태 관리
+  const [userInfo, setUserInfo] = useState({ nickname: "", email: "" });
+  const [loading, setLoading] = useState(true);
+  const [nicknameInput, setNicknameInput] = useState("");
+  const [emailInput, setEmailInput] = useState("");
+  const [passwordInput, setPasswordInput] = useState("");
+  const [passwordConfirm, setPasswordConfirm] = useState("");
+
+  // 이메일 인증 관련 상태
+  const [isEmailSent, setIsEmailSent] = useState(false);
+  const [isEmailVerified, setIsEmailVerified] = useState(false); // 인증 링크 클릭 여부
+
+  // 사용자 정보 로드
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         const db = getDatabase(app);
         const snapshot = await get(ref(db, `users/${user.uid}`));
         const nickname = snapshot.exists() ? snapshot.val().nickname : "";
-        
-        setUserInfo({
-          nickname: nickname,
-          email: user.email,
-        });
-        setIsVerified(user.emailVerified);
-        setLoading(false);
-      } else {
-        setLoading(false);
+        setUserInfo({ nickname, email: user.email });
       }
+      setLoading(false);
     });
-    
     return () => unsubscribe();
   }, []);
 
-  // 이메일 인증 메일 발송 (새 이메일로)
+  // 닉네임 수정
+  const handleNicknameUpdate = async () => {
+    if (!nicknameInput.trim()) {
+      Alert.alert('알림', '새 닉네임을 입력해주세요.');
+      return;
+    }
+    try {
+      const user = auth.currentUser;
+      const db = getDatabase(app);
+      await update(ref(db, `users/${user.uid}`), { nickname: nicknameInput });
+      setUserInfo(prev => ({ ...prev, nickname: nicknameInput }));
+      setNicknameInput("");
+      Alert.alert('수정 완료', '닉네임이 성공적으로 변경되었습니다.');
+    } catch (error) {
+      Alert.alert('오류', error.message);
+    }
+  };
+
+  // 이메일 인증 메일 전송
   const handleSendVerification = async () => {
-    if (!newInfo.email) {
+    if (!emailInput.trim()) {
       Alert.alert('알림', '새 이메일을 입력해주세요.');
       return;
     }
-    
-    if (!newInfo.currentPassword) {
-      Alert.alert('알림', '보안을 위해 현재 비밀번호를 입력해주세요.');
-      return;
-    }
-
     try {
       const user = auth.currentUser;
-      
-      // 재인증 (보안 작업 전 필수)
-      const credential = EmailAuthProvider.credential(
-        user.email, 
-        newInfo.currentPassword
-      );
-      
-      await reauthenticateWithCredential(user, credential);
-      
-      // 새 이메일로 인증 메일 전송
-      await verifyBeforeUpdateEmail(user, newInfo.email);
-      
+      await verifyBeforeUpdateEmail(user, emailInput);
       setIsEmailSent(true);
-      Alert.alert('인증 메일 전송', '새 이메일 주소로 인증 링크를 발송했습니다. 링크를 클릭하여 이메일을 인증해주세요.');
+      setIsEmailVerified(false); // 새 인증 시작 시 초기화
+      Alert.alert('인증 메일 전송', '이메일로 인증 링크를 발송했습니다.');
     } catch (error) {
-      if (error.code === 'auth/wrong-password') {
-        Alert.alert('오류', '현재 비밀번호가 올바르지 않습니다.');
-      } else {
-        Alert.alert('오류', error.message);
-      }
+      Alert.alert('오류', error.message);
     }
   };
 
   // 인증 상태 새로고침
   const handleReloadUser = async () => {
     try {
-      if (auth.currentUser) {
-        await auth.currentUser.reload();
-        
-        // 이메일이 변경되었는지 확인
-        const user = auth.currentUser;
-        setIsVerified(user.emailVerified);
-        
-        if (user.email === newInfo.email && user.emailVerified) {
-          // DB에도 이메일 업데이트
-          const db = getDatabase(app);
-          await update(ref(db, `users/${user.uid}`), { email: user.email });
-          
-          // 상태 업데이트
-          setUserInfo(prev => ({ ...prev, email: user.email }));
-          setNewInfo(prev => ({ ...prev, email: "" }));
-          
-          Alert.alert('인증 완료', '이메일이 성공적으로 변경되었습니다!');
-        } else {
-          Alert.alert('아직 인증이 완료되지 않았습니다.', '이메일의 인증 링크를 클릭한 후 다시 시도하세요.');
-        }
+      const user = auth.currentUser;
+      await user.reload();
+      // 인증 링크 클릭 시, auth의 이메일이 새 이메일로 바뀌고 emailVerified가 true가 됨
+      if (user.email === emailInput && user.emailVerified) {
+        setIsEmailVerified(true);
+        Alert.alert('인증 완료', '이메일 인증이 확인되었습니다. "수정" 버튼을 눌러주세요.');
+      } else {
+        setIsEmailVerified(false);
+        Alert.alert('알림', '아직 이메일 인증이 완료되지 않았습니다.');
       }
     } catch (error) {
       Alert.alert('오류', error.message);
     }
   };
 
-  // 정보 수정 핸들러
-  const handleSubmit = async () => {
-    // 현재 비밀번호 확인
-    if (!newInfo.currentPassword) {
-      return Alert.alert('알림', '보안을 위해 현재 비밀번호를 입력해주세요.');
-    }
-    
-    // 비밀번호 일치 확인
-    if (newInfo.password && newInfo.password !== newInfo.confirm) {
-      return Alert.alert('알림', '비밀번호가 일치하지 않습니다.');
-    }
-    
+  // 이메일 DB 최종 변경
+  const handleEmailUpdate = async () => {
     try {
       const user = auth.currentUser;
       const db = getDatabase(app);
-      
-      // 재인증 (보안 작업 전 필수)
-      const credential = EmailAuthProvider.credential(
-        user.email, 
-        newInfo.currentPassword
-      );
-      
-      await reauthenticateWithCredential(user, credential);
-      
-      // 닉네임 변경
-      if (newInfo.nickname && newInfo.nickname !== userInfo.nickname) {
-        await update(ref(db, `users/${user.uid}`), { nickname: newInfo.nickname });
-        
-        // 상태 업데이트
-        setUserInfo(prev => ({ ...prev, nickname: newInfo.nickname }));
-        setNewInfo(prev => ({ ...prev, nickname: "" }));
-      }
-      
-      // 비밀번호 변경
-      if (newInfo.password) {
-        await updatePassword(user, newInfo.password);
-        setNewInfo(prev => ({ ...prev, password: "", confirm: "", currentPassword: "" }));
-        Alert.alert('비밀번호 변경', '비밀번호가 성공적으로 변경되었습니다.');
-      } else {
-        Alert.alert('수정 완료', '정보가 성공적으로 수정되었습니다.');
-      }
-      
+      await update(ref(db, `users/${user.uid}`), { email: user.email });
+      setUserInfo(prev => ({ ...prev, email: user.email }));
+      setEmailInput("");
+      setIsEmailSent(false);
+      setIsEmailVerified(false);
+      Alert.alert('수정 완료', '이메일이 성공적으로 변경되었습니다!');
     } catch (error) {
-      if (error.code === 'auth/wrong-password') {
-        Alert.alert('오류', '현재 비밀번호가 올바르지 않습니다.');
-      } else {
-        Alert.alert('오류', error.message);
-      }
+      Alert.alert('오류', error.message);
+    }
+  };
+
+  // 비밀번호 수정
+  const handlePasswordUpdate = async () => {
+    if (!passwordInput || !passwordConfirm) {
+      Alert.alert('알림', '새 비밀번호와 확인을 입력해주세요.');
+      return;
+    }
+    if (passwordInput !== passwordConfirm) {
+      Alert.alert('알림', '비밀번호가 일치하지 않습니다.');
+      return;
+    }
+    try {
+      const user = auth.currentUser;
+      await updatePassword(user, passwordInput);
+      setPasswordInput("");
+      setPasswordConfirm("");
+      Alert.alert('성공', '비밀번호가 변경되었습니다.');
+    } catch (error) {
+      Alert.alert('오류', error.message);
     }
   };
 
   useEffect(() => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-      router.push('../../(screen)/profile');
+      router.push('/main/profile');
       return true;
     });
-
     return () => backHandler.remove();
   }, []);
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <CustomHeader showBack title="정보 수정" />
       {loading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#6B4B39" />
         </View>
       ) : (
         <View style={styles.container}>
-          {/* 닉네임 섹션 */}
+          {/* 닉네임 수정 세트 */}
           <View style={styles.infoGroup}>
             <Text style={styles.label}>닉네임</Text>
             <Text style={styles.currentInfo}>현재: {userInfo.nickname}</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="새로운 닉네임 입력"
-              value={newInfo.nickname}
-              onChangeText={(text) => setNewInfo({...newInfo, nickname: text})}
-            />
+            <View style={styles.inputButtonRow}>
+              <TextInput
+                style={[styles.input, { flex: 1 }]}
+                placeholder="새 닉네임 입력"
+                value={nicknameInput}
+                onChangeText={setNicknameInput}
+              />
+              <Pressable style={styles.inlineButton} onPress={handleNicknameUpdate}>
+                <Text style={styles.buttonText}>수정</Text>
+              </Pressable>
+            </View>
           </View>
+          <View style={styles.divider} />
 
-          {/* 이메일 섹션 */}
+          {/* 이메일 수정 세트 */}
           <View style={styles.infoGroup}>
             <Text style={styles.label}>이메일</Text>
             <Text style={styles.currentInfo}>현재: {userInfo.email}</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="새로운 이메일 입력"
-              value={newInfo.email}
-              onChangeText={(text) => setNewInfo({...newInfo, email: text})}
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-            <View style={styles.emailRow}>
-              <Pressable
-                style={[styles.verifyButton, !newInfo.email && styles.disabledButton]}
-                onPress={handleSendVerification}
-                disabled={!newInfo.email}
-              >
-                <Text style={styles.buttonText}>{isEmailSent ? '전송 완료' : '인증 전송'}</Text>
-              </Pressable>
-              {isEmailSent && !isVerified && (
-                <Pressable style={styles.reloadButton} onPress={handleReloadUser}>
-                  <Text style={styles.reloadButtonText}>인증 상태 새로고침</Text>
+            <View style={styles.inputButtonRow}>
+              <TextInput
+                style={[styles.input, { flex: 1 }]}
+                placeholder="새 이메일 입력"
+                value={emailInput}
+                onChangeText={setEmailInput}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+              {!isEmailSent ? (
+                <Pressable style={styles.inlineButton} onPress={handleSendVerification}>
+                  <Text style={styles.buttonText}>인증</Text>
                 </Pressable>
+              ) : (
+                !isEmailVerified ? (
+                  <Pressable style={styles.inlineButton} onPress={handleReloadUser}>
+                    <Text style={styles.buttonText}>인증 새로고침</Text>
+                  </Pressable>
+                ) : (
+                  <Pressable
+                    style={[styles.inlineButton, styles.confirmedButton]}
+                    onPress={handleEmailUpdate}
+                  >
+                    <Text style={styles.buttonText}>수정</Text>
+                  </Pressable>
+                )
               )}
             </View>
           </View>
+          <View style={styles.divider} />
 
-          {/* 비밀번호 섹션 */}
+          {/* 비밀번호 수정 세트 */}
           <View style={styles.infoGroup}>
             <Text style={styles.label}>비밀번호</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="현재 비밀번호 입력"
-              value={newInfo.currentPassword}
-              onChangeText={(text) => setNewInfo({...newInfo, currentPassword: text})}
-              secureTextEntry
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="새로운 비밀번호 입력"
-              value={newInfo.password}
-              onChangeText={(text) => setNewInfo({...newInfo, password: text})}
-              secureTextEntry
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="비밀번호 재입력"
-              value={newInfo.confirm}
-              onChangeText={(text) => setNewInfo({...newInfo, confirm: text})}
-              secureTextEntry
-            />
-            <Text style={styles.passwordHint}>
-              비밀번호는 7~12자, 소문자, 숫자, 특수문자를 모두 포함해야 합니다.
-            </Text>
+            <View style={styles.inputButtonRowColumn}>
+              <TextInput
+                style={styles.input}
+                placeholder="새 비밀번호"
+                value={passwordInput}
+                onChangeText={setPasswordInput}
+                secureTextEntry
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="비밀번호 확인"
+                value={passwordConfirm}
+                onChangeText={setPasswordConfirm}
+                secureTextEntry
+              />
+              <Pressable style={styles.fullButton} onPress={handlePasswordUpdate}>
+                <Text style={styles.buttonText}>비밀번호 변경</Text>
+              </Pressable>
+            </View>
           </View>
-
-          <Pressable style={styles.button} onPress={handleSubmit}>
-            <Text style={styles.buttonText}>수정 완료</Text>
-          </Pressable>
         </View>
       )}
     </SafeAreaView>
   );
 }
-export default EditInfoScreen;
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: "#FEF6F0" },
   container: { flex: 1, padding: 20 },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  infoGroup: { marginBottom: 20 },
+  infoGroup: { marginBottom: 0 },
   label: {
     fontSize: 16,
     fontWeight: "bold",
@@ -303,39 +266,40 @@ const styles = StyleSheet.create({
     fontSize: 16,
     borderWidth: 1,
     borderColor: "#E5D1B8",
-    marginBottom: 8,
+    marginBottom: 0,
   },
-  emailRow: { flexDirection: 'row', alignItems: 'center', marginTop: 4 },
-  verifyButton: {
-    backgroundColor: "#6B4B39",
-    borderRadius: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 18,
-    marginRight: 8,
-    justifyContent: 'center',
+  inputButtonRow: {
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
   },
-  disabledButton: { backgroundColor: "#CCC" },
-  reloadButton: {
-    backgroundColor: "#C4A484",
-    padding: 10,
-    borderRadius: 8,
+  inlineButton: {
+    backgroundColor: "#6B4B39",
+    paddingVertical: 14,
+    paddingHorizontal: 18,
+    borderRadius: 10,
+    marginLeft: 8,
     alignItems: "center",
+    justifyContent: "center",
   },
-  reloadButtonText: { color: "#fff", fontWeight: "bold", fontSize: 14 },
-  button: {
+  confirmedButton: {
+    backgroundColor: "#4CAF50",
+  },
+  inputButtonRowColumn: {
+    flexDirection: "column",
+    gap: 8,
+  },
+  fullButton: {
     backgroundColor: "#6B4B39",
     padding: 15,
     borderRadius: 10,
     alignItems: "center",
-    marginTop: 20,
+    marginTop: 8,
   },
   buttonText: { color: "#FFFFFF", fontSize: 16, fontWeight: "bold" },
-  passwordHint: {
-    color: "#888",
-    fontSize: 12,
-    marginTop: -4,
-    marginBottom: 8,
-    paddingLeft: 8,
+  divider: {
+    height: 1,
+    backgroundColor: "#E5D1B8",
+    marginVertical: 28,
   },
 });
