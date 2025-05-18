@@ -17,7 +17,7 @@ const ChallengeScreen = ()=> {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <CustomHeader title="챌린지" showIcons={true} />
+      <CustomHeader title="챌린지" showIcons={false} />
       
       <ScrollView style={styles.container}>
         {/* 현재 진행 중인 챌린지 카드 */}
@@ -47,6 +47,15 @@ const ChallengeScreen = ()=> {
           <MaterialIcons name="add-circle" size={24} color="#6B4B39" />
           <Text style={styles.newChallengeText}>새로운 챌린지 생성</Text>
         </Pressable>
+
+        {/* Challenge2 테스트용 버튼 */}
+          <Pressable 
+            style={styles.newChallengeButton}
+            onPress={() => router.push('../../(screen)/challenge/Challenge2')}
+          >
+            <Text style={styles.newChallengeText}>Challenge2 테스트</Text>
+          </Pressable>
+
       </ScrollView>
     </SafeAreaView>
   );

@@ -17,12 +17,12 @@ const CreateChallengeScreen = ()=> {
 
   useEffect(() => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-      router.push('../../(screen)/challenge/Detail');
+      router.push('/(tabs)/challenge');
       return true;
     });
 
     return () => backHandler.remove();
-  }, []);
+  }, [router]);
 
   const generateChallenge = async () => {
     try {

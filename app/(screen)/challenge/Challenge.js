@@ -1,6 +1,7 @@
+import React, { useEffect } from 'react';
 import {useRouter,useLocalSearchParams} from "expo-router"
 import { SafeAreaView } from "react-native-safe-area-context";
-import { StyleSheet,View,Text,Pressable } from "react-native";
+import { StyleSheet,View,Text,Pressable,BackHandler} from "react-native";
 import CustomHeader from '../../../components/CustomHeader';
 
 
@@ -8,6 +9,15 @@ const Challenge = ()=> {
     const router = useRouter();
     const {level,result} = useLocalSearchParams();
     const decodedResult = decodeURIComponent(result || '');
+
+    useEffect(() => {
+      const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+        router.push('/(tabs)/challenge');
+        return true;
+      });
+  
+      return () => backHandler.remove();
+    }, [router]);
 
     return (
         <SafeAreaView style = {styles.safeArea}>

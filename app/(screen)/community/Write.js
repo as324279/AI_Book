@@ -7,6 +7,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { getDatabase, ref, get, push, set } from "firebase/database";
 import { getAuth } from "firebase/auth";
 import app from "../../../firebase/firebase.client"
+import CustomHeader from '../../../components/CustomHeader';
 
 const WritePostScreen = ()=> {
   const router = useRouter();
@@ -19,11 +20,11 @@ const WritePostScreen = ()=> {
 
   useEffect(() => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-      router.push('../../(screen)/community');
+      router.push('/(tabs)/community');
       return true;
     });
     return () => backHandler.remove();
-  }, []);
+  }, [router]);
 
   const pickImage = async () => {
     try {
@@ -79,6 +80,7 @@ const WritePostScreen = ()=> {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      <CustomHeader showBack title="게시글 작성" showIcons={false} />
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.categoryContainer}>
           {categories.map((cat) => (

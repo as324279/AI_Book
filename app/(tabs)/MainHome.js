@@ -1,9 +1,10 @@
-import React from 'react';
-import { View, Text, StyleSheet, Pressable, Alert } from 'react-native';
-import { useRouter } from 'expo-router';
-import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
+import { useRouter } from 'expo-router';
+import React from 'react';
+import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import CustomHeader from '../../components/CustomHeader';
 
 const MainHome = () =>{
 
@@ -36,63 +37,29 @@ const MainHome = () =>{
       };
 
     return(
-        <View style = {styles.container}>
+        <SafeAreaView style={styles.safeArea} edges={['top']}>
+          <CustomHeader
+            showBack={false}
+            showIcons={true}
+            title="BOOKMARK"
+            onPressSearch={() => router.replace('./BookSearch')}
+          /> 
 
-          <View style = {styles.header}>
-          <View style = {styles.headerLeft}>
-            <Text style = {styles.Title}>BookMark</Text>
-          </View>
-          <Pressable style={styles.headerRight} onPress={() => router.replace('./BookSearch')}>
-            <MaterialIcons name='search' size={20} color='black' style={{ marginRight: 1 }} />
-          </Pressable>
-          <MaterialIcons name = 'menu' size = {20} color = "black"/>
-
-          </View>
-        
-        
         <View style = {styles.body}>
             <Pressable style = {styles.Button} onPress = {takePicture}>
                 <Text style = {styles.captureText}>책 표지 촬영</Text>
             </Pressable>
-        </View>
-  
-        
-        </View>
+          </View>
+        </SafeAreaView>
     )
 };
+
 export default MainHome;
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
-    backgroundColor: '#FFF4E9',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingTop: 50,
-    paddingHorizontal: 20,
-    paddingBottom: 10,
-    backgroundColor: '#FFF4E9',
-  },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  logo: {
-    width: 24,
-    height: 24,
-    marginRight: 8,
-  },
-  Title: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginLeft:150
+    backgroundColor: "#FEF6F0",
   },
   body: {
     flex: 1,

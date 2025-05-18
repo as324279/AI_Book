@@ -21,12 +21,12 @@ const ChallengeDetailScreen = ()=> {
 
   useEffect(() => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-      router.push('../../(screen)/Challenge');
+      router.push('/(tabs)/challenge');
       return true;
     });
 
     return () => backHandler.remove();
-  }, []);
+  }, [router]);
 
   return (
     <SafeAreaView style={styles.safeArea}>

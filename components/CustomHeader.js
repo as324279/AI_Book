@@ -1,21 +1,19 @@
+import { usePathname, useRouter } from 'expo-router';
 import React from 'react';
-import { View, Text, StyleSheet, Image, Pressable, StatusBar } from 'react-native';
+import { Image, Pressable, StatusBar, StyleSheet, Text, View } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import { useRouter, usePathname } from 'expo-router';
 
-export default function CustomHeader({ showBack = false, showIcons = true, title }) {
+export default function CustomHeader({ showBack = false, showIcons = true, title, onPressSearch }) {
   const router = useRouter();
   const pathname = usePathname();
 
   const handleBack = () => {
-    if (router.canGoBack() && pathname?.includes('/main/profile/')) {
-      router.push('/main/profile');
-    }
-    else if(router.canGoBack() && pathname?.includes('/main/community/')){
-      router.push('/main/community');
-    }
-    else if(router.canGoBack() && pathname?.includes('/main/challenge/')){
-      router.push('/main/challenge');
+    if (pathname?.includes('/profile/')) {
+      router.replace('/(tabs)/profile');
+    } else if (pathname?.includes('/community/')) {
+      router.replace('/(tabs)/community');
+    } else if (pathname?.includes('/challenge/')) {
+      router.replace('/(tabs)/challenge');
     } else {
       router.back();
     }
@@ -31,17 +29,18 @@ export default function CustomHeader({ showBack = false, showIcons = true, title
               <MaterialIcons name="arrow-back" size={24} color="#6B4B39" />
             </Pressable>
           ) : (
-            <Image 
-              source={require('../assets/logo.png')} 
+            <Image
+              source={require('../assets/logo.png')}
               style={styles.logo}
               resizeMode="contain"
             />
           )}
           <Text style={styles.appName}>{title || 'BOOKMARK'}</Text>
         </View>
+
         {showIcons && (
           <View style={styles.headerRight}>
-            <Pressable style={styles.searchButton}>
+            <Pressable style={styles.searchButton} onPress={onPressSearch}>
               <MaterialIcons name="search" size={24} color="#6B4B39" />
             </Pressable>
             <Pressable style={styles.menuButton}>

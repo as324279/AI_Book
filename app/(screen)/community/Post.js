@@ -6,6 +6,7 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { getDatabase, ref, onValue, update, push, remove, get } from "firebase/database";
 import { getAuth } from "firebase/auth";
 import app from "../../../firebase/firebase.client"
+import CustomHeader from '../../../components/CustomHeader';
 
 function formatDate(ts) {
   const d = new Date(ts);
@@ -27,11 +28,11 @@ const PostDetailScreen = ()=> {
 
   useEffect(() => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-      router.push('../../(screen)/community');
+      router.push('/(tabs)/community');
       return true;
     });
     return () => backHandler.remove();
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     const db = getDatabase(app);
@@ -76,7 +77,7 @@ const PostDetailScreen = ()=> {
         const db = getDatabase(app);
         await remove(ref(db, `posts/${postId}`));
         Alert.alert('알림', '게시글이 삭제되었습니다.');
-        router.push('../../(screen)/community');
+        router.push('../../(tabs)/community');
       }}
     ]);
   };
@@ -170,6 +171,7 @@ const PostDetailScreen = ()=> {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      <CustomHeader showBack title={`${post?.category || '게시글'}게시판`} showIcons={false} />
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.postHeader}>
           <MaterialIcons name="person" size={20} color="#C4A484" />

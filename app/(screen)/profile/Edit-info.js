@@ -76,7 +76,7 @@ const EditInfoScreen = ()=> {
     try {
       const user = auth.currentUser;
       
-      // 재인증 (보안 작업 전 필수)
+      // 재인증 (t보안 작업 전 필수)
       const credential = EmailAuthProvider.credential(
         user.email, 
         newInfo.currentPassword
@@ -87,7 +87,7 @@ const EditInfoScreen = ()=> {
       // 새 이메일로 인증 메일 전송
       await verifyBeforeUpdateEmail(user, newInfo.email);
       
-      setIsEmailSent(true);
+      setIsEmailSen(true);
       Alert.alert('인증 메일 전송', '새 이메일 주소로 인증 링크를 발송했습니다. 링크를 클릭하여 이메일을 인증해주세요.');
     } catch (error) {
       if (error.code === 'auth/wrong-password') {
@@ -180,12 +180,12 @@ const EditInfoScreen = ()=> {
 
   useEffect(() => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-      router.push('../../(screen)/profile');
+      router.push('/(tabs)/profile');
       return true;
     });
 
     return () => backHandler.remove();
-  }, []);
+  }, [router]);
 
   return (
     <SafeAreaView style={styles.safeArea}>

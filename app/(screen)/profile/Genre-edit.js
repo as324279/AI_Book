@@ -48,11 +48,12 @@ const  GenreEditScreen = ()=> {
   // 3. 뒤로가기 핸들러
   useEffect(() => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-      router.push('../../(screen)/profile');
-      return true;
+      router.push('/(tabs)/profile');
+      return true; 
     });
+  
     return () => backHandler.remove();
-  }, []);
+  }, [router]);
 
   return (
     <SafeAreaView style={styles.safeArea}>

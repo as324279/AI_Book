@@ -1,20 +1,20 @@
+import { useRouter } from "expo-router";
 import React, { useEffect } from "react";
-import { View, Text, StyleSheet, ScrollView, BackHandler } from "react-native";
+import { BackHandler, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import CustomHeader from "../../../components/CustomHeader";
-import { useRouter } from "expo-router";
 
 const LibraryScreen = ()=> {
   const router = useRouter();
 
   useEffect(() => {
-    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-      router.push('../../(screen)/profile');
-      return true;
-    });
-
-    return () => backHandler.remove();
-  }, []);
+      const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+        router.push('/(tabs)/profile');
+        return true; 
+      });
+    
+      return () => backHandler.remove();
+    }, [router]);
 
   return (
     <SafeAreaView style={styles.safeArea}>

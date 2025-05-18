@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Image, Pressable  } from "react-native";
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Image, Pressable, BackHandler } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons,MaterialIcons } from '@expo/vector-icons'; 
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { getDatabase, ref, onValue } from "firebase/database";
 import app from "../../../firebase/firebase.client"
 import {useRouter} from "expo-router";
+import CustomHeader from "../../../components/CustomHeader";
 
 
 const ALADIN_API_KEY= "ttbas3242751932001";
@@ -17,6 +18,14 @@ const RecommendScreen = ()=> {
   const [loading, setLoading] = useState(true);
 
   const router = useRouter();
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+      router.push('/(tabs)/profile');
+      return true; 
+    });
+  
+    return () => backHandler.remove();
+  }, [router]);
   // 🔥 1. 유저 로그인 확인
   useEffect(() => {
     const auth = getAuth(app);
@@ -110,9 +119,7 @@ const RecommendScreen = ()=> {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <Pressable onPress = {()=>router.replace('../../(tabs)/MainHome')}>
-            <MaterialIcons  name = "arrow-back-ios" size = {20} color = '#000'/>
-        </Pressable>
+      <CustomHeader showBack title={"추천 도서 목록"} showIcons={false} />
       <Text style={styles.title}> 점수 기반 추천 도서 </Text>
           {loading ? (
         <ActivityIndicator size="large" color="#6B4B39" style={{ marginTop: 20 }} />

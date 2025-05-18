@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { View, Text, TextInput, StyleSheet, Pressable, Alert } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, Text, TextInput, StyleSheet, Pressable, Alert, BackHandler } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { getAuth, EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
@@ -11,6 +11,15 @@ const PasswordCheckScreen = ()=> {
   const router = useRouter();
    const auth = getAuth(app);
   const [currentPassword, setCurrentPassword] = useState("");
+
+  useEffect(() => {
+      const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+        router.push('/(tabs)/profile');
+        return true; 
+      });
+    
+      return () => backHandler.remove();
+    }, [router]);
 
   const handlePasswordCheck = async () => {
     if (!currentPassword) {

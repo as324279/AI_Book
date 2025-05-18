@@ -6,6 +6,7 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { getDatabase, ref, onValue, query, orderByChild } from "firebase/database";
 import { getAuth } from "firebase/auth";
 import app from "../../../firebase/firebase.client";
+import CustomHeader from '../../../components/CustomHeader';
 
 const CommunityScreen = ()=> {
   const router = useRouter();
@@ -47,6 +48,10 @@ const CommunityScreen = ()=> {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      <CustomHeader
+        title="커뮤니티"
+        showIcons={false}
+      />
       <View style={styles.categoryContainer}>
         {categories.map((category) => (
           <Pressable

@@ -73,12 +73,12 @@ const InterestEditScreen = ()=> {
 
   useEffect(() => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-      router.push('../../(screen)/profile');
+      router.push('/(tabs)/profile');
       return true;
     });
 
     return () => backHandler.remove();
-  }, []);
+  }, [router]);
 
   const handleSubmit = async () => {
     if (!genre1 || !genre2 || !genre3) {

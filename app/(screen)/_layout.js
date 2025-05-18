@@ -79,10 +79,13 @@ const MainLayout = ()=> {
       <Tabs.Screen name="profile/Library" options={{ href: null }} />
       <Tabs.Screen name="profile/Interest-edit" options={{ href: null }} /> 
       <Tabs.Screen name="profile/Pw-check" options={{href: null}} />
+      <Tabs.Screen name="profile/Recommend" options={{ href: null }} />
       <Tabs.Screen name="community/Post" options={{ href: null }} />
       <Tabs.Screen name="community/Write" options={{ href: null }} />
       <Tabs.Screen name="challenge/Detail" options={{ href: null }} />
       <Tabs.Screen name="challenge/Create" options={{ href: null }} />
+      <Tabs.Screen name="challenge/Challenge" options={{ href: null }} />
+      <Tabs.Screen name="challenge/Challenge2" options={{ href: null }} />
       <Tabs.Screen name="CameraScreen" options={{ href: null }} />
       <Tabs.Screen name="BookSearch" options={{ href: null }} />
       {/* <Tabs.Screen name="index" options={{ href: null }} /> */}

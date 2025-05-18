@@ -13,11 +13,14 @@
   "dependencies": {
     "@expo/metro-config": "^0.20.13",
     "@expo/vector-icons": "^14.1.0",
+    "@google-cloud/vision": "^5.1.0",
     "@react-native-async-storage/async-storage": "^2.1.2",
     "@react-navigation/bottom-tabs": "^7.3.10",
     "@react-navigation/elements": "^2.3.8",
     "@react-navigation/native": "^7.1.6",
     "axios": "^1.9.0",
+    "body-parser": "^2.2.0",
+    "cors": "^2.8.5",
     "expo": "~53.0.5",
     "expo-blur": "~14.1.4",
     "expo-constants": "~17.1.5",
@@ -33,7 +36,12 @@
     "expo-symbols": "~0.4.4",
     "expo-system-ui": "~5.0.7",
     "expo-web-browser": "~14.1.6",
+    "express": "^5.1.0",
     "firebase": "^11.6.1",
+    "fs": "^0.0.1-security",
+    "multer": "^1.4.5-lts.2",
+    "openai": "^4.98.0",
+    "path": "^0.12.7",
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "react-native": "0.79.2",
@@ -44,7 +52,9 @@
     "react-native-safe-area-context": "5.4.0",
     "react-native-screens": "~4.10.0",
     "react-native-web": "~0.20.0",
-    "react-native-webview": "13.13.5"
+    "react-native-webview": "13.13.5",
+    "string-similarity": "^4.0.4",
+    "@react-native-community/slider": "4.5.6"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
