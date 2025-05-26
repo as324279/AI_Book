@@ -29,7 +29,7 @@ const WritePostScreen = ()=> {
   const pickImage = async () => {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: 'Images',
         allowsEditing: true,
         aspect: [4, 3],
         quality: 1,
@@ -72,7 +72,7 @@ const WritePostScreen = ()=> {
         timestamp: Date.now()
       });
       Alert.alert('성공', '게시글이 등록되었습니다!');
-      router.push('../../(screen)/community');
+      router.push('../../(tabs)/community');
     } catch (error) {
       Alert.alert('오류', error.message);
     }

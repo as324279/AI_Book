@@ -1,12 +1,14 @@
-import React from 'react';
-import { View, Text, StyleSheet, Pressable, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
+import { getAuth, signOut } from 'firebase/auth';
+import React from 'react';
+import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import CustomHeader from '../../../components/CustomHeader';
-
+import app from '../../../firebase/firebase.client';
 
 const ProfileScreen = ()=> {
   const router = useRouter();
+  const auth = getAuth(app);
 
   // 로그아웃 버튼 눌렀을 때
   const handleLogout = () => {
@@ -18,10 +20,15 @@ const ProfileScreen = ()=> {
         {
           text: '예',
           style: 'destructive',
-          onPress: () => {
-            // Firebase Auth 로그아웃 처리 추가
-            Alert.alert('로그아웃 되었습니다.');
-            router.replace('/'); // 시작화면으로 이동
+          onPress: async () => {
+            try {
+              await signOut(auth);
+              Alert.alert('로그아웃 되었습니다.');
+              router.replace('/(auth)/login');
+            } catch (error) {
+              console.error('로그아웃 오류:', error);
+              Alert.alert('오류', '로그아웃 중 문제가 발생했습니다.');
+            }
           },
         },
       ],

@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Pressable, TextInput, Alert, BackHandler } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, BackHandler, Pressable, StyleSheet, Text, View, TextInput } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import CustomHeader from '../../../components/CustomHeader';
 
 const CreateChallengeScreen = ()=> {
@@ -11,7 +11,7 @@ const CreateChallengeScreen = ()=> {
   const [duration, setDuration] = useState(4);
   const [challengeResult, setChallengeResult] = useState('');
   const [loading, setLoading] = useState(false);
-
+  const [previewChallenge, setPreviewChallenge] = useState('');
 
   const level = ['초급', '중급', '고급'];
 
@@ -24,10 +24,33 @@ const CreateChallengeScreen = ()=> {
     return () => backHandler.remove();
   }, [router]);
 
+  const getPreviewChallenge = async (level) => {
+    try {
+      setLoading(true);
+      const response = await fetch('http://192.168.0.16:5000/generate-challenge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ level }),
+      });
+
+      const data = await response.json();
+      setPreviewChallenge(data.result);
+      setLoading(false);
+    } catch (error) {
+      setLoading(false);
+      console.error('Error:', error);
+      setPreviewChallenge('서버 오류가 발생했습니다.');
+    }
+  };
+
+  useEffect(() => {
+    getPreviewChallenge(selectedLevel);
+  }, [selectedLevel]);
+
   const generateChallenge = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://192.168.219.101:5000/generate-challenge', {
+      const response = await fetch('http://192.168.0.16:5000/generate-challenge', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ level: selectedLevel }),
@@ -58,7 +81,7 @@ const CreateChallengeScreen = ()=> {
       <CustomHeader showBack title="새로운 챌린지" showIcons={false} />
       
       <View style={styles.container}>
-        <Text style={styles.sectionTitle}>🔥 초급 난이도</Text>
+        <Text style={styles.sectionTitle}>🔥 {selectedLevel} 난이도</Text>
         
         <View style={styles.levelContainer}>
           {level.map((level) => (
@@ -79,6 +102,16 @@ const CreateChallengeScreen = ()=> {
             </Pressable>
           ))}
         </View>
+
+        <View style={styles.previewContainer}>
+          <Text style={styles.previewTitle}>챌린지 미리보기</Text>
+          {loading ? (
+            <ActivityIndicator size="large" color="#6B4B39" />
+          ) : (
+            <Text style={styles.previewText}>{previewChallenge}</Text>
+          )}
+        </View>
+
         <Pressable style={styles.createButton} onPress={generateChallenge}>
           <Text style={styles.createButtonText}>챌린지 시작하기</Text>
         </Pressable>
@@ -128,18 +161,24 @@ const styles = StyleSheet.create({
   levelTextActive: {
     color: '#FFF',
   },
-  label: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 8,
-    color: '#333',
-  },
-  input: {
+  previewContainer: {
     backgroundColor: '#FFF',
-    padding: 12,
+    padding: 16,
     borderRadius: 8,
+    marginBottom: 100,
     borderWidth: 1,
     borderColor: '#E5D1B8',
+  },
+  previewTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 12,
+    color: '#333',
+  },
+  previewText: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: '#666',
   },
   createButton: {
     backgroundColor: '#6B4B39',

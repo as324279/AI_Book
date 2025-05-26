@@ -59,7 +59,7 @@ const BookSearchScreen = ()=> {
 
   return (
     <View style = {styles.container}>
-        <Pressable onPress = {()=>router.replace('./MainHome')}>
+        <Pressable onPress = {()=>router.push('/(tabs)/MainHome')}>
             <MaterialIcons  name = "arrow-back-ios" size = {20} color = '#000'/>
         </Pressable>
         <Text style={styles.title}>📚 BookMark</Text>  

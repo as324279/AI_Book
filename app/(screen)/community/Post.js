@@ -1,36 +1,57 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Image, TextInput, Alert, BackHandler } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import { getDatabase, ref, onValue, update, push, remove, get } from "firebase/database";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { getAuth } from "firebase/auth";
-import app from "../../../firebase/firebase.client"
-import CustomHeader from '../../../components/CustomHeader';
+import {
+  get,
+  getDatabase,
+  onValue,
+  push,
+  ref,
+  remove,
+  update,
+} from "firebase/database";
+import React, { useEffect, useState } from "react";
+import {
+  Alert,
+  BackHandler,
+  Image,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import MaterialIcons from "react-native-vector-icons/MaterialIcons";
+import CustomHeader from "../../../components/CustomHeader";
+import app from "../../../firebase/firebase.client";
 
 function formatDate(ts) {
   const d = new Date(ts);
-  const MM = (d.getMonth() + 1).toString().padStart(2, '0');
-  const DD = d.getDate().toString().padStart(2, '0');
-  const hh = d.getHours().toString().padStart(2, '0');
-  const mm = d.getMinutes().toString().padStart(2, '0');
+  const MM = (d.getMonth() + 1).toString().padStart(2, "0");
+  const DD = d.getDate().toString().padStart(2, "0");
+  const hh = d.getHours().toString().padStart(2, "0");
+  const mm = d.getMinutes().toString().padStart(2, "0");
   return `${MM}/${DD} ${hh}:${mm}`;
 }
 
-const PostDetailScreen = ()=> {
+const PostDetailScreen = () => {
   const router = useRouter();
   const { postId } = useLocalSearchParams();
   const [showOptions, setShowOptions] = useState(false);
-  const [comment, setComment] = useState('');
+  const [comment, setComment] = useState("");
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
-   const auth = getAuth(app);
+  const auth = getAuth(app);
 
   useEffect(() => {
-    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-      router.push('/(tabs)/community');
-      return true;
-    });
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => {
+        router.push("/(tabs)/community");
+        return true;
+      }
+    );
     return () => backHandler.remove();
   }, [router]);
 
@@ -46,18 +67,21 @@ const PostDetailScreen = ()=> {
               ...comment,
               timestamp: formatDate(comment.timestamp),
               isOwner: auth.currentUser?.uid === comment.author?.uid,
-              nickname: comment.author?.nickname || '알 수 없음'
+              nickname: comment.author?.nickname || "알 수 없음",
             }))
           : [];
         setPost({
           ...data,
           id: postId,
-          author: data.author || { nickname: '알 수 없음', uid: 'anonymous' },
+          author: data.author || { nickname: "알 수 없음", uid: "anonymous" },
           timestamp: formatDate(data.timestamp),
           comments: commentsArray,
           isOwner: auth.currentUser?.uid === data.author?.uid,
-          isLiked: data.likes && auth.currentUser?.uid && data.likes[auth.currentUser.uid],
-          likeCount: data.likes ? Object.keys(data.likes).length : 0
+          isLiked:
+            data.likes &&
+            auth.currentUser?.uid &&
+            data.likes[auth.currentUser.uid],
+          likeCount: data.likes ? Object.keys(data.likes).length : 0,
         });
       }
       setLoading(false);
@@ -68,43 +92,47 @@ const PostDetailScreen = ()=> {
   const handleDeletePost = async () => {
     if (!auth.currentUser) return;
     if (post.author.uid !== auth.currentUser.uid) {
-      Alert.alert('알림', '자신이 작성한 게시글만 삭제할 수 있습니다.');
+      Alert.alert("알림", "자신이 작성한 게시글만 삭제할 수 있습니다.");
       return;
     }
-    Alert.alert('게시글 삭제', '정말 이 게시글을 삭제하시겠습니까?', [
-      { text: '취소', style: 'cancel' },
-      { text: '삭제', style: 'destructive', onPress: async () => {
-        const db = getDatabase(app);
-        await remove(ref(db, `posts/${postId}`));
-        Alert.alert('알림', '게시글이 삭제되었습니다.');
-        router.push('../../(tabs)/community');
-      }}
+    Alert.alert("게시글 삭제", "정말 이 게시글을 삭제하시겠습니까?", [
+      { text: "취소", style: "cancel" },
+      {
+        text: "삭제",
+        style: "destructive",
+        onPress: async () => {
+          const db = getDatabase(app);
+          await remove(ref(db, `posts/${postId}`));
+          Alert.alert("알림", "게시글이 삭제되었습니다.");
+          router.push("../../(tabs)/community");
+        },
+      },
     ]);
   };
 
   const handleComment = async () => {
     if (!comment.trim()) return;
     if (!auth.currentUser) {
-      Alert.alert('알림', '로그인이 필요합니다.');
+      Alert.alert("알림", "로그인이 필요합니다.");
       return;
     }
     try {
       const db = getDatabase(app);
       const userRef = ref(db, `users/${auth.currentUser.uid}`);
       const userSnap = await get(userRef);
-      const nickname = userSnap.val()?.nickname || '알 수 없음';
+      const nickname = userSnap.val()?.nickname || "알 수 없음";
       const commentsRef = ref(db, `posts/${postId}/comments`);
       await push(commentsRef, {
         author: {
           uid: auth.currentUser.uid,
-          nickname: nickname
+          nickname: nickname,
         },
         content: comment,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
-      setComment('');
+      setComment("");
     } catch (error) {
-      Alert.alert('오류', '댓글을 작성하는 중 문제가 발생했습니다.');
+      Alert.alert("오류", "댓글을 작성하는 중 문제가 발생했습니다.");
     }
   };
 
@@ -116,24 +144,28 @@ const PostDetailScreen = ()=> {
       const snapshot = await get(commentRef);
       const commentData = snapshot.val();
       if (commentData.author.uid !== auth.currentUser.uid) {
-        Alert.alert('알림', '자신이 작성한 댓글만 삭제할 수 있습니다.');
+        Alert.alert("알림", "자신이 작성한 댓글만 삭제할 수 있습니다.");
         return;
       }
-      Alert.alert('댓글 삭제', '정말 이 댓글을 삭제하시겠습니까?', [
-        { text: '취소', style: 'cancel' },
-        { text: '삭제', style: 'destructive', onPress: async () => {
-          await remove(commentRef);
-          Alert.alert('알림', '댓글이 삭제되었습니다.');
-        }}
+      Alert.alert("댓글 삭제", "정말 이 댓글을 삭제하시겠습니까?", [
+        { text: "취소", style: "cancel" },
+        {
+          text: "삭제",
+          style: "destructive",
+          onPress: async () => {
+            await remove(commentRef);
+            Alert.alert("알림", "댓글이 삭제되었습니다.");
+          },
+        },
       ]);
     } catch (error) {
-      Alert.alert('오류', '댓글 삭제 중 문제가 발생했습니다.');
+      Alert.alert("오류", "댓글 삭제 중 문제가 발생했습니다.");
     }
   };
 
   const handleLike = async () => {
     if (!auth.currentUser) {
-      Alert.alert('알림', '로그인이 필요합니다.');
+      Alert.alert("알림", "로그인이 필요합니다.");
       return;
     }
     try {
@@ -146,7 +178,7 @@ const PostDetailScreen = ()=> {
         await update(likesRef, { [userId]: true });
       }
     } catch (error) {
-      Alert.alert('오류', '좋아요 처리 중 문제가 발생했습니다.');
+      Alert.alert("오류", "좋아요 처리 중 문제가 발생했습니다.");
     }
   };
 
@@ -171,13 +203,20 @@ const PostDetailScreen = ()=> {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <CustomHeader showBack title={`${post?.category || '게시글'}게시판`} showIcons={false} />
+      <CustomHeader
+        showBack
+        title={`${post?.category || "게시글"}게시판`}
+        showIcons={false}
+      />
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.postHeader}>
           <MaterialIcons name="person" size={20} color="#C4A484" />
           <Text style={styles.authorName}>{post.author.nickname}</Text>
           <Text style={styles.timestamp}>{post.timestamp}</Text>
-          <Pressable style={styles.optionsButton} onPress={() => setShowOptions(!showOptions)}>
+          <Pressable
+            style={styles.optionsButton}
+            onPress={() => setShowOptions(!showOptions)}
+          >
             <MaterialIcons name="more-vert" size={24} color="#6B4B39" />
           </Pressable>
           {showOptions && post.isOwner && (
@@ -189,23 +228,25 @@ const PostDetailScreen = ()=> {
           )}
         </View>
         <Text style={styles.postTitle}>{post.title}</Text>
-        {post.image ? (
+        {post.image && (
           <Image source={{ uri: post.image }} style={styles.postImage} />
-        ) : (
-          <Image source={require('../../../assets/logo.png')} style={styles.postImage} />
         )}
         <Text style={styles.postContent}>{post.content}</Text>
         <View style={styles.interactionBar}>
           <Pressable style={styles.interactionButton} onPress={handleLike}>
-            <MaterialIcons 
-              name={post.isLiked ? "favorite" : "favorite-border"} 
-              size={20} 
-              color="#C4A484" 
+            <MaterialIcons
+              name={post.isLiked ? "favorite" : "favorite-border"}
+              size={20}
+              color="#C4A484"
             />
             <Text style={styles.interactionText}>{post.likeCount}</Text>
           </Pressable>
           <View style={styles.interactionButton}>
-            <MaterialIcons name="chat-bubble-outline" size={20} color="#C4A484" />
+            <MaterialIcons
+              name="chat-bubble-outline"
+              size={20}
+              color="#C4A484"
+            />
             <Text style={styles.interactionText}>{post.comments.length}</Text>
           </View>
         </View>
@@ -216,10 +257,12 @@ const PostDetailScreen = ()=> {
               <View key={comment.id} style={styles.commentItem}>
                 <View style={styles.commentHeader}>
                   <Text style={styles.commentAuthor}>{comment.nickname}</Text>
-                  <Text style={styles.commentTimestamp}>{comment.timestamp}</Text>
+                  <Text style={styles.commentTimestamp}>
+                    {comment.timestamp}
+                  </Text>
                   {comment.isOwner && (
-                    <Pressable 
-                      style={styles.deleteButton} 
+                    <Pressable
+                      style={styles.deleteButton}
                       onPress={() => handleDeleteComment(comment.id)}
                     >
                       <MaterialIcons name="delete" size={16} color="#C4A484" />
@@ -230,7 +273,9 @@ const PostDetailScreen = ()=> {
               </View>
             ))
           ) : (
-            <Text style={styles.noComments}>아직 댓글이 없습니다. 첫 댓글을 작성해보세요!</Text>
+            <Text style={styles.noComments}>
+              아직 댓글이 없습니다. 첫 댓글을 작성해보세요!
+            </Text>
           )}
         </View>
       </ScrollView>
@@ -261,41 +306,41 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   postHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: 16,
-    position: 'relative',
+    position: "relative",
   },
   authorInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   authorName: {
     marginLeft: 6,
     fontSize: 14,
-    fontWeight: '500',
-    color: '#6B4B39',
+    fontWeight: "500",
+    color: "#6B4B39",
   },
   timestamp: {
     marginLeft: 8,
     fontSize: 12,
-    color: '#999',
+    color: "#999",
   },
   optionsButton: {
     padding: 4,
   },
   optionsMenu: {
-    position: 'absolute',
+    position: "absolute",
     right: 0,
     top: 30,
-    backgroundColor: '#FFF',
+    backgroundColor: "#FFF",
     borderRadius: 8,
     elevation: 4,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 3,
@@ -304,20 +349,20 @@ const styles = StyleSheet.create({
   optionItem: {
     padding: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: "#F0F0F0",
   },
   optionText: {
     fontSize: 14,
-    color: '#333',
+    color: "#333",
   },
   postTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 12,
-    color: '#333',
+    color: "#333",
   },
   postImage: {
-    width: '100%',
+    width: "100%",
     height: 200,
     borderRadius: 12,
     marginBottom: 16,
@@ -325,87 +370,87 @@ const styles = StyleSheet.create({
   postContent: {
     fontSize: 16,
     lineHeight: 24,
-    color: '#333',
+    color: "#333",
     marginBottom: 16,
   },
   interactionBar: {
-    flexDirection: 'row',
+    flexDirection: "row",
     paddingVertical: 12,
     borderTopWidth: 1,
     borderBottomWidth: 1,
-    borderColor: '#F0F0F0',
+    borderColor: "#F0F0F0",
     marginBottom: 16,
   },
   interactionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginRight: 16,
   },
   interactionText: {
     marginLeft: 4,
     fontSize: 14,
-    color: '#999',
+    color: "#999",
   },
   commentsSection: {
     marginBottom: 16,
   },
   commentsTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 12,
-    color: '#333',
+    color: "#333",
   },
   commentItem: {
-    backgroundColor: '#FFF',
+    backgroundColor: "#FFF",
     borderRadius: 8,
     padding: 12,
     marginBottom: 8,
     elevation: 1,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 1,
   },
   commentHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 6,
   },
   commentAuthor: {
     fontSize: 14,
-    fontWeight: '500',
-    color: '#6B4B39',
+    fontWeight: "500",
+    color: "#6B4B39",
   },
   commentTimestamp: {
     marginLeft: 8,
     fontSize: 12,
-    color: '#999',
+    color: "#999",
   },
   deleteButton: {
-    marginLeft: 'auto',
+    marginLeft: "auto",
     padding: 4,
   },
   commentContent: {
     fontSize: 14,
-    color: '#333',
+    color: "#333",
     lineHeight: 20,
   },
   noComments: {
-    color: '#999',
-    fontStyle: 'italic',
-    textAlign: 'center',
+    color: "#999",
+    fontStyle: "italic",
+    textAlign: "center",
     padding: 16,
   },
   commentInput: {
-    flexDirection: 'row',
-    backgroundColor: '#FFF',
+    flexDirection: "row",
+    backgroundColor: "#FFF",
     padding: 8,
     borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
+    borderTopColor: "#F0F0F0",
   },
   input: {
     flex: 1,
-    backgroundColor: '#F8F8F8',
+    backgroundColor: "#F8F8F8",
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 8,
@@ -413,6 +458,6 @@ const styles = StyleSheet.create({
   },
   sendButton: {
     padding: 8,
-    alignSelf: 'flex-end',
+    alignSelf: "flex-end",
   },
 });

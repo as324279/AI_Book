@@ -42,7 +42,7 @@ const MainHome = () =>{
             showBack={false}
             showIcons={true}
             title="BOOKMARK"
-            onPressSearch={() => router.replace('./BookSearch')}
+            onPressSearch={() => router.push('/(screen)/BookSearch')}
           /> 
 
         <View style = {styles.body}>
