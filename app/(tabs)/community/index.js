@@ -7,7 +7,7 @@ import {
   query,
   ref,
 } from "firebase/database";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Image,
   Pressable,
@@ -28,6 +28,7 @@ const CommunityScreen = () => {
   const categories = ["추천", "자유", "리뷰"];
   const auth = getAuth(app);
 
+  // 날짜 포맷 함수
   function formatDate(ts) {
     const d = new Date(ts);
     const MM = (d.getMonth() + 1).toString().padStart(2, "0");
@@ -37,6 +38,7 @@ const CommunityScreen = () => {
     return `${MM}/${DD} ${hh}:${mm}`;
   }
 
+  // [기능] 게시글 실시간 구독 및 파싱
   useEffect(() => {
     const db = getDatabase(app);
     const postsRef = query(ref(db, "posts"), orderByChild("timestamp"));
@@ -54,7 +56,7 @@ const CommunityScreen = () => {
               auth.currentUser?.uid &&
               post.likes[auth.currentUser.uid],
             comments: post.comments ? Object.keys(post.comments).length : 0,
-            author: post.author?.nickname || "알 수 없음",
+            author: post.author?.nickname || post.author?.username || "알 수 없음",
           }))
         : [];
       setPosts(postsArray.reverse());
@@ -65,6 +67,7 @@ const CommunityScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <CustomHeader title="커뮤니티" showIcons={false} />
+      {/* 카테고리 선택 */}
       <View style={styles.categoryContainer}>
         {categories.map((category) => (
           <Pressable
@@ -86,6 +89,7 @@ const CommunityScreen = () => {
           </Pressable>
         ))}
       </View>
+      {/* 게시글 목록 */}
       <ScrollView style={styles.container}>
         {posts
           .filter((post) => post.category === selectedCategory)
@@ -100,19 +104,21 @@ const CommunityScreen = () => {
                 })
               }
             >
-              <View style={styles.postHeader}>
-                <MaterialIcons name="person" size={18} color="#C4A484" />
+            <View style={styles.postHeader}>
+              <View style={styles.authorInfo}> {/* [추가] 아이콘+작성자 왼쪽 정렬 */}
+                  <MaterialIcons name="person" size={18} color="#C4A484" />
                 <Text style={styles.authorName}>{post.author}</Text>
-                <Text style={styles.timestamp}>{post.timestamp}</Text>
-              </View>
+                </View>
+                <Text style={styles.timestamp}>{post.timestamp}</Text> {/* [오른쪽 정렬] */}
+            </View>
               <View style={styles.postContent}>
                 {/* 게시글에 이미지가 존재할 경우에만 이미지를 렌더링 */}
-                {post.image ? (
+                {post.image && (
                   <Image
                     source={{ uri: post.image }}
                     style={styles.postImage}
                   />
-                ) : null}
+                )}
                 <View style={[styles.postText, !post.image && { flex: 1 }]}>
                   <Text style={styles.postTitle}>{post.title}</Text>
                   <Text style={styles.postPreview}>{post.preview}</Text>
@@ -136,6 +142,7 @@ const CommunityScreen = () => {
             </Pressable>
           ))}
       </ScrollView>
+      {/* 글쓰기 버튼 */}
       <Pressable
         style={styles.writeButton}
         onPress={() => router.push("../../(screen)/community/Write")}
@@ -145,6 +152,7 @@ const CommunityScreen = () => {
     </SafeAreaView>
   );
 };
+
 export default CommunityScreen;
 
 const styles = StyleSheet.create({
@@ -193,6 +201,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 12,
+    alignItems: "center",
   },
   authorInfo: {
     flexDirection: "row",
@@ -205,9 +214,10 @@ const styles = StyleSheet.create({
     color: "#6B4B39",
   },
   timestamp: {
-    marginLeft: 8,
     fontSize: 12,
     color: "#999",
+    textAlign: "right",
+    minWidth: 60,
   },
   postContent: {
     flexDirection: "row",

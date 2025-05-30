@@ -1,45 +1,124 @@
-import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Dimensions, BackHandler } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import CustomHeader from '../../../components/CustomHeader';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import { ProgressChart } from 'react-native-chart-kit';
 import { useRouter } from "expo-router";
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, BackHandler, Dimensions, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ProgressChart } from 'react-native-chart-kit';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import CustomHeader from '../../../components/CustomHeader';
+
+import { getAuth } from "firebase/auth";
+import { getDatabase, onValue, ref } from "firebase/database";
+import app from "../../../firebase/firebase.client";
 
 const screenWidth = Dimensions.get('window').width;
 
-const ChallengeDetailScreen = ()=> {
-    const router = useRouter();
-  const challengeDetails = {
-    title: '초급 난이도',
-    completedTasks: [
-      { id: 1, text: '지정대로를 읽고 보고 싶은 작식', completed: true, progress: 0.8 },
-      { id: 2, text: '읽고 보면 재미있는 경제 지식', completed: false, progress: 0.3 },
-    ],
-    progress: 0.55, // react-native-chart-kit은 0~1 값 사용
-  };
+const ChallengeDetailScreen = () => {
+  const router = useRouter();
+  const [loading, setLoading] = useState(true);
+  const [challenges, setChallenges] = useState({});
 
+  // 파이어베이스에서 챌린지 데이터 불러오기
+  useEffect(() => {
+    const auth = getAuth(app);
+    const user = auth.currentUser;
+    if (user) {
+      const db = getDatabase(app);
+      const challengesRef = ref(db, `users/${user.uid}/challenges`);
+      onValue(challengesRef, (snapshot) => {
+        const data = snapshot.val();
+        const challengeData = {};
+        if (data) {
+          Object.entries(data).forEach(([id, challenge]) => {
+            const level = challenge.level || '기타';
+            if (!challengeData[level]) challengeData[level] = [];
+            const books = challenge.books || {};
+            const recordedBooks = Object.keys(books).length;
+            const targetBooks = challenge.targetBooks || 1;
+            const targetPeriodDays = challenge.targetPeriodDays || 30;
+            const createdAt = challenge.createdAt || new Date().toISOString();
+            const elapsedDays = Math.min(
+              Math.ceil((new Date() - new Date(createdAt)) / (1000 * 60 * 60 * 24)),
+              targetPeriodDays
+            );
+            const isCompleted = challenge.progress >= 1 || recordedBooks >= targetBooks;
+            const progress = Math.min((recordedBooks / targetBooks), 1);
+            challengeData[level].push({
+              id,
+              title: challenge.result?.substring(0, 30) + "..." || '챌린지',
+              result: challenge.result || '',
+              createdAt,
+              books,
+              recordedBooks,
+              targetBooks,
+              targetPeriodDays,
+              elapsedDays,
+              isCompleted,
+              progress,
+              level
+            });
+          });
+        }
+        setChallenges(challengeData);
+        setLoading(false);
+      });
+    } else {
+      setChallenges({});
+      setLoading(false);
+    }
+  }, []);
+
+  // 뒤로가기: 항상 challenge 탭으로 이동
   useEffect(() => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
       router.push('/(tabs)/challenge');
       return true;
     });
-
     return () => backHandler.remove();
   }, [router]);
 
+  // 전체 진행률 계산 (진행중 챌린지만)
+  const calculateTotalProgress = () => {
+    let active = [];
+    Object.values(challenges).forEach(list => {
+      active = active.concat(list.filter(c => !c.isCompleted));
+    });
+    if (active.length === 0) return 0;
+    const sum = active.reduce((acc, challenge) => acc + challenge.progress, 0);
+    return sum / active.length;
+  };
+
+  const getLevelColor = (level, isCompleted) => {
+    const colorMap = {
+      '초급': '#6B4B39',
+      '중급': '#3949AB',
+      '고급': '#D32F2F'
+    };
+    if (isCompleted) return '#BCA177';
+    return colorMap[level] || '#6B4B39';
+  };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <CustomHeader showBack title="챌린지 상세" showIcons={false} />
+        <View style={styles.container}>
+          <ActivityIndicator size="large" color="#6B4B39" />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.safeArea}>
-      <CustomHeader showBack title={challengeDetails.title} showIcons={false} />
-      
+      <CustomHeader showBack title="챌린지 상세" showIcons={false} />
       <ScrollView style={styles.container}>
-        {/* 원형 진행률 차트 */}
+        {/* 전체 진행률 */}
         <View style={styles.chartContainer}>
           <Text style={styles.chartTitle}>전체 진행률</Text>
           <ProgressChart
             data={{
-              labels: ['챌린지'], // optional
-              data: [challengeDetails.progress],
+              labels: ['챌린지'],
+              data: [calculateTotalProgress()],
             }}
             width={screenWidth - 32}
             height={180}
@@ -54,49 +133,136 @@ const ChallengeDetailScreen = ()=> {
             hideLegend={true}
           />
           <Text style={styles.chartPercentage}>
-            {(challengeDetails.progress * 100).toFixed(0)}%
+            {(calculateTotalProgress() * 100).toFixed(0)}%
           </Text>
         </View>
 
-        {/* 할 일 목록 */}
-        <View style={styles.tasksSection}>
-          {challengeDetails.completedTasks.map((task) => (
-            <View key={task.id} style={styles.taskItem}>
-              <View style={styles.taskHeader}>
-                <MaterialIcons 
-                  name={task.completed ? "check-circle" : "radio-button-unchecked"} 
-                  size={24} 
-                  color={task.completed ? "#6B4B39" : "#999"}
-                />
-                <Text style={[
-                  styles.taskText,
-                  task.completed && styles.taskTextCompleted
-                ]}>
-                  {task.text}
-                </Text>
-              </View>
-              
-              {/* 작업별 진행률 */}
-              <View style={styles.taskProgressContainer}>
-                <View style={styles.taskProgressBar}>
-                  <View 
-                    style={[
-                      styles.taskProgressFill, 
-                      { width: `${task.progress * 100}%` }
-                    ]} 
-                  />
-                </View>
-                <Text style={styles.taskProgressText}>
-                  {(task.progress * 100).toFixed(0)}%
-                </Text>
-              </View>
+        {/* 난이도별 챌린지 목록 */}
+        {Object.keys(challenges).map((level) => {
+          const levelChallenges = challenges[level];
+          const activeLevelChallenges = levelChallenges.filter(c => !c.isCompleted);
+          const completedLevelChallenges = levelChallenges.filter(c => c.isCompleted);
+
+          return (
+            <View key={level} style={styles.tasksSection}>
+              {/* 진행 중 챌린지 */}
+              {activeLevelChallenges.length > 0 && (
+                <>
+                  <Text style={styles.levelTitle}>{level} 진행 중인 챌린지</Text>
+                  {activeLevelChallenges.map((challenge) => (
+                    <Pressable
+                      key={challenge.id}
+                      style={styles.taskItem}
+                      onPress={() =>
+                        router.push({
+                          pathname: '/challenge/Challenge',
+                          params: {
+                            level: challenge.level,
+                            result: encodeURIComponent(challenge.result),
+                            challengeId: challenge.id
+                          }
+                        })
+                      }
+                    >
+                      <View style={styles.taskHeader}>
+                        <MaterialIcons
+                          name="radio-button-unchecked"
+                          size={24}
+                          color={getLevelColor(challenge.level, false)}
+                        />
+                        <Text style={styles.taskText}>{challenge.title}</Text>
+                      </View>
+                      <View style={styles.taskProgressContainer}>
+                        <View style={styles.taskProgressBar}>
+                          <View
+                            style={[
+                              styles.taskProgressFill,
+                              {
+                                width: `${challenge.progress * 100}%`,
+                                backgroundColor: getLevelColor(challenge.level, false)
+                              }
+                            ]}
+                          />
+                        </View>
+                        <Text style={[styles.taskProgressText, { color: getLevelColor(challenge.level, false) }]}>
+                          {(challenge.progress * 100).toFixed(0)}%
+                        </Text>
+                      </View>
+                      <Text style={styles.bookCount}>
+                        기록한 책: {challenge.recordedBooks}/{challenge.targetBooks} | 기간: {challenge.elapsedDays}/{challenge.targetPeriodDays}일
+                      </Text>
+                    </Pressable>
+                  ))}
+                </>
+              )}
+              {/* 완료 챌린지 */}
+              {completedLevelChallenges.length > 0 && (
+                <>
+                  <Text style={styles.levelTitle}>{level} 완료한 챌린지</Text>
+                  {completedLevelChallenges.map((challenge) => (
+                    <Pressable
+                      key={challenge.id}
+                      style={styles.taskItem}
+                      onPress={() =>
+                        router.push({
+                          pathname: '/challenge/Challenge',
+                          params: {
+                            level: challenge.level,
+                            result: encodeURIComponent(challenge.result),
+                            challengeId: challenge.id
+                          }
+                        })
+                      }
+                    >
+                      <View style={styles.taskHeader}>
+                        <MaterialIcons
+                          name="check-circle"
+                          size={24}
+                          color={getLevelColor(challenge.level, true)}
+                        />
+                        <Text style={[styles.taskText, styles.taskTextCompleted]}>{challenge.title}</Text>
+                      </View>
+                      <View style={styles.taskProgressContainer}>
+                        <View style={styles.taskProgressBar}>
+                          <View
+                            style={[
+                              styles.taskProgressFill,
+                              {
+                                width: `100%`,
+                                backgroundColor: getLevelColor(challenge.level, true)
+                              }
+                            ]}
+                          />
+                        </View>
+                        <Text style={[styles.taskProgressText, { color: getLevelColor(challenge.level, true) }]}>
+                          100%
+                        </Text>
+                      </View>
+                      <Text style={styles.bookCount}>
+                        기록한 책: {challenge.recordedBooks}/{challenge.targetBooks} | 기간: {challenge.elapsedDays}/{challenge.targetPeriodDays}일
+                      </Text>
+                    </Pressable>
+                  ))}
+                </>
+              )}
             </View>
-          ))}
-        </View>
+          );
+        })}
+
+        {/* 아무 챌린지도 없을 때 안내 */}
+        {Object.keys(challenges).length === 0 && (
+          <View style={styles.emptyContainer}>
+            <MaterialIcons name="info" size={48} color="#BCA177" />
+            <Text style={styles.emptyText}>
+              진행 중인 챌린지가 없습니다.{'\n'}새 챌린지를 시작해보세요!
+            </Text>
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
 };
+
 export default ChallengeDetailScreen;
 
 const styles = StyleSheet.create({
@@ -131,6 +297,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF',
     padding: 16,
     borderRadius: 12,
+    marginBottom: 16,
+  },
+  levelTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 16,
   },
   taskItem: {
     paddingVertical: 12,
@@ -165,13 +337,31 @@ const styles = StyleSheet.create({
   },
   taskProgressFill: {
     height: '100%',
-    backgroundColor: '#6B4B39',
     borderRadius: 4,
   },
   taskProgressText: {
     marginLeft: 8,
     fontSize: 12,
-    color: '#6B4B39',
     fontWeight: 'bold',
+  },
+  bookCount: {
+    marginLeft: 36,
+    marginTop: 8,
+    fontSize: 14,
+    color: '#666',
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 40,
+    backgroundColor: '#FFF',
+    borderRadius: 12,
+  },
+  emptyText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#999',
+    textAlign: 'center',
+    lineHeight: 24,
   },
 });

@@ -1,20 +1,19 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, ActivityIndicator, Alert, Pressable } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
 import axios from 'axios';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import { useRouter } from 'expo-router';
 
-//각자 개인의 와이파이 주소로 사용 -> 핸드폰과 노트북 와이파이가 일치해야 함.
-const EXPRESS_SERVER_URL = 'http://192.168.0.16:5000';
+// 각자 개인의 와이파이 주소로 사용 -> 핸드폰과 노트북 와이파이가 일치해야 함.
+const EXPRESS_SERVER_URL = 'http://211.108.99.224:5000';
 
 const CameraScreen = () => {
   const { imageUri } = useLocalSearchParams();
   const [bookData, setBookData] = useState(null);
   const [loading, setLoading] = useState(true);
-
   const router = useRouter();
 
+  // [기능] 이미지 URI가 있으면 서버로 전송하여 OCR 결과 받아오기
   useEffect(() => {
     if (imageUri) {
       sendImageToBackend(imageUri);
@@ -44,42 +43,43 @@ const CameraScreen = () => {
   };
 
   return (
-    <View style = {styles.screen}>
-      <View style = {styles.header}>
-        <Pressable onPress = {()=>router.replace('../(screen)/MainHome')}>
-        <MaterialIcons  name = "arrow-back-ios" size = {20} color = '#000'/>
+    <View style={styles.screen}>
+      {/* [헤더] */}
+      <View style={styles.header}>
+        <Pressable onPress={() => router.replace('../(screen)/MainHome')}>
+          <MaterialIcons name="arrow-back-ios" size={20} color="#000" />
         </Pressable>
-
-        <Text style = {styles.headerTitle}>BookMark</Text>
-        <Pressable >
-        <MaterialIcons  name = "menu" size = {20} color = '#000'/>
+        <Text style={styles.headerTitle}>BookMark</Text>
+        <Pressable>
+          <MaterialIcons name="menu" size={20} color="#000" />
         </Pressable>
       </View>
-    
 
+      {/* [본문] */}
+      <ScrollView contentContainerStyle={styles.container}>
+        {imageUri && <Image source={{ uri: imageUri }} style={styles.image} />}
+        {loading && <ActivityIndicator size="large" color="#000" />}
+        {bookData && (
+          <View style={styles.infoBox}>
+            <Text style={styles.title}>{bookData.best_title}</Text>
+            <Text>저자: {bookData.authors?.join(', ') || '정보 없음'}</Text>
+            <Text>출판사: {bookData.publisher || '정보 없음'}</Text>
+            <Text>출판년도: {bookData.publishedDate || '정보 없음'}</Text>
+            <Text>개요: {bookData.description || '요약 없음'}</Text>
+          </View>
+        )}
+      </ScrollView>
 
-    <ScrollView contentContainerStyle={styles.container}>
-      {imageUri && <Image source={{ uri: imageUri }} style={styles.image} />}
-      {loading && <ActivityIndicator size="large" color="#000" />}
-      {bookData && (
-        <View style={styles.infoBox}>
-          <Text style={styles.title}>{bookData.best_title}</Text>
-          <Text>저자: {bookData.authors?.join(', ') || '정보 없음'}</Text>
-          <Text>출판사: {bookData.publisher || '정보 없음'}</Text>
-          <Text>출판년도: {bookData.publishedDate || '정보 없음'}</Text>
-          <Text>개요: {bookData.description || '요약 없음'}</Text>
-          {/* <Text>개요: {bookData.summary || '요약 없음'}</Text> */}
-        </View>
-        
-      )}
-    </ScrollView>
-
-    <View style = {styles.footer}>
-        <Pressable style={styles.saveButton} onPress={() => Alert.alert('저장 완료!', '내 서재에 담겼어요.')}>
+      {/* [하단 버튼] */}
+      <View style={styles.footer}>
+        <Pressable
+          style={styles.saveButton}
+          onPress={() => Alert.alert('저장 완료!', '내 서재에 담겼어요.')}
+        >
           <Text style={styles.saveButtonText}>내 서재에 담기</Text>
         </Pressable>
+      </View>
     </View>
-  </View>
   );
 };
 
@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: '#FFF4E9',
-    position:'relative'
+    position: 'relative',
   },
   header: {
     paddingTop: 50,
@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
     padding: 20,
-    paddingBottom:100
+    paddingBottom: 100,
   },
   image: {
     width: 200,
@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     marginTop: 30,
     borderWidth: 2,
-    borderColor: '#000', // ✅ 검은색 테두리
+    borderColor: '#000',
     borderRadius: 4,
   },
   infoBox: {
@@ -125,7 +125,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 6,
     width: '100%',
-    marginBottom: 100, // 버튼 안 가리도록 여유
+    marginBottom: 100,
   },
   title: {
     fontSize: 18,

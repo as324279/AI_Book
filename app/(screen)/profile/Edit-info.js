@@ -3,7 +3,7 @@ import {
   getAuth,
   onAuthStateChanged,
   updatePassword,
-  verifyBeforeUpdateEmail
+  verifyBeforeUpdateEmail,
 } from "firebase/auth";
 import { get, getDatabase, ref, update } from "firebase/database";
 import React, { useEffect, useState } from "react";
@@ -15,9 +15,10 @@ import {
   StyleSheet,
   Text,
   TextInput,
-  View
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import app from "../../../firebase/firebase.client";
 
 export default function EditInfoScreen() {
@@ -31,24 +32,34 @@ export default function EditInfoScreen() {
   const [emailInput, setEmailInput] = useState("");
   const [passwordInput, setPasswordInput] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
-
-  // 이메일 인증 관련 상태
   const [isEmailSent, setIsEmailSent] = useState(false);
-  const [isEmailVerified, setIsEmailVerified] = useState(false); // 인증 링크 클릭 여부
 
-  // 사용자 정보 로드
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        const db = getDatabase(app);
-        const snapshot = await get(ref(db, `users/${user.uid}`));
-        const nickname = snapshot.exists() ? snapshot.val().nickname : "";
-        setUserInfo({ nickname, email: user.email });
+  // 사용자 정보 로드 및 DB-Auth 이메일 자동 동기화
+useEffect(() => {
+  const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      const db = getDatabase(app);
+      const userRef = ref(db, `users/${user.uid}`);
+      const snapshot = await get(userRef);
+      const nickname = snapshot.exists() ? snapshot.val().nickname : "";
+      const dbEmail = snapshot.exists() ? snapshot.val().email : "";
+      setUserInfo({ nickname, email: user.email });
+
+      // 인증 링크 클릭 후 Auth 이메일과 DB 이메일이 다르면 DB 이메일을 Auth 이메일로 동기화
+      if (user.email && dbEmail && user.email !== dbEmail) {
+        try {
+          await update(userRef, { email: user.email });
+        } catch (err) {
+          // 동기화 실패 시 무시
+        }
       }
       setLoading(false);
-    });
-    return () => unsubscribe();
-  }, []);
+    } else {
+      setLoading(false);
+    }
+  });
+  return () => unsubscribe();
+}, []);
 
   // 닉네임 수정
   const handleNicknameUpdate = async () => {
@@ -58,6 +69,10 @@ export default function EditInfoScreen() {
     }
     try {
       const user = auth.currentUser;
+      if (!user) {
+        Alert.alert("알림", "로그인 후 이용해주세요.");
+        return;
+      }
       const db = getDatabase(app);
       await update(ref(db, `users/${user.uid}`), { nickname: nicknameInput });
       setUserInfo(prev => ({ ...prev, nickname: nicknameInput }));
@@ -68,7 +83,7 @@ export default function EditInfoScreen() {
     }
   };
 
-  // 이메일 인증 메일 전송
+  // 1. 변경할 이메일 입력 후 인증 버튼 클릭 → 인증 메일 전송
   const handleSendVerification = async () => {
     if (!emailInput.trim()) {
       Alert.alert('알림', '새 이메일을 입력해주세요.');
@@ -76,46 +91,44 @@ export default function EditInfoScreen() {
     }
     try {
       const user = auth.currentUser;
+      if (!user) {
+        Alert.alert("알림", "로그인 후 이용해주세요.");
+        return;
+      }
       await verifyBeforeUpdateEmail(user, emailInput);
       setIsEmailSent(true);
-      setIsEmailVerified(false); // 새 인증 시작 시 초기화
       Alert.alert('인증 메일 전송', '이메일로 인증 링크를 발송했습니다.');
     } catch (error) {
       Alert.alert('오류', error.message);
     }
   };
 
-  // 인증 상태 새로고침
+  // 2. 인증 링크 클릭 후 앱 진입 → 3. 새로고침 시 재로그인 유도
   const handleReloadUser = async () => {
     try {
       const user = auth.currentUser;
-      await user.reload();
-      // 인증 링크 클릭 시, auth의 이메일이 새 이메일로 바뀌고 emailVerified가 true가 됨
-      if (user.email === emailInput && user.emailVerified) {
-        setIsEmailVerified(true);
-        Alert.alert('인증 완료', '이메일 인증이 확인되었습니다. "수정" 버튼을 눌러주세요.');
-      } else {
-        setIsEmailVerified(false);
-        Alert.alert('알림', '아직 이메일 인증이 완료되지 않았습니다.');
+      if (!user) {
+        Alert.alert("알림", "로그인 정보가 없습니다. 다시 로그인해주세요.");
+        router.replace('/login'); // 로그인 화면으로 이동
+        return;
       }
+      await user.reload();
+      // 인증 링크 클릭 후 세션 만료로 인해 로그아웃된 경우 반드시 재로그인 필요
+      Alert.alert(
+        "알림",
+        "이메일 인증 후에는 반드시 새 이메일로 다시 로그인해야 합니다.",
+        [
+          { text: "확인", onPress: () => router.replace('/login') }
+        ]
+      );
     } catch (error) {
-      Alert.alert('오류', error.message);
-    }
-  };
-
-  // 이메일 DB 최종 변경
-  const handleEmailUpdate = async () => {
-    try {
-      const user = auth.currentUser;
-      const db = getDatabase(app);
-      await update(ref(db, `users/${user.uid}`), { email: user.email });
-      setUserInfo(prev => ({ ...prev, email: user.email }));
-      setEmailInput("");
-      setIsEmailSent(false);
-      setIsEmailVerified(false);
-      Alert.alert('수정 완료', '이메일이 성공적으로 변경되었습니다!');
-    } catch (error) {
-      Alert.alert('오류', error.message);
+      Alert.alert(
+        "세션 만료",
+        "이메일 인증 후에는 반드시 새 이메일로 다시 로그인해야 합니다.",
+        [
+          { text: "확인", onPress: () => router.replace('/login') }
+        ]
+      );
     }
   };
 
@@ -131,6 +144,11 @@ export default function EditInfoScreen() {
     }
     try {
       const user = auth.currentUser;
+      if (!user) {
+        Alert.alert("알림", "로그인 정보가 없습니다. 다시 로그인해주세요.");
+        router.replace("/login");
+        return;
+      }
       await updatePassword(user, passwordInput);
       setPasswordInput("");
       setPasswordConfirm("");
@@ -142,21 +160,29 @@ export default function EditInfoScreen() {
 
   useEffect(() => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-      router.push('/(tabs)/profile');
+      router.push('/main/profile');
       return true;
     });
     return () => backHandler.remove();
-  }, [router]);
+  }, []);
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      <View style={styles.header}>
+        <Pressable style={styles.headerIconLeft} onPress={() => router.back()}>
+          <MaterialIcons name="arrow-back" size={28} color="#6B4B39" />
+        </Pressable>
+        <View style={styles.headerLogoTitle}>
+          <Text style={styles.headerTitle}>계정</Text>
+        </View>
+      </View>
       {loading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#6B4B39" />
         </View>
       ) : (
         <View style={styles.container}>
-          {/* 닉네임 수정 세트 */}
+          {/* 닉네임 수정 */}
           <View style={styles.infoGroup}>
             <Text style={styles.label}>닉네임</Text>
             <Text style={styles.currentInfo}>현재: {userInfo.nickname}</Text>
@@ -173,8 +199,7 @@ export default function EditInfoScreen() {
             </View>
           </View>
           <View style={styles.divider} />
-
-          {/* 이메일 수정 세트 */}
+          {/* 이메일 인증/수정 */}
           <View style={styles.infoGroup}>
             <Text style={styles.label}>이메일</Text>
             <Text style={styles.currentInfo}>현재: {userInfo.email}</Text>
@@ -184,32 +209,22 @@ export default function EditInfoScreen() {
                 placeholder="새 이메일 입력"
                 value={emailInput}
                 onChangeText={setEmailInput}
-                keyboardType="email-address"
                 autoCapitalize="none"
+                keyboardType="email-address"
               />
               {!isEmailSent ? (
                 <Pressable style={styles.inlineButton} onPress={handleSendVerification}>
                   <Text style={styles.buttonText}>인증</Text>
                 </Pressable>
               ) : (
-                !isEmailVerified ? (
-                  <Pressable style={styles.inlineButton} onPress={handleReloadUser}>
-                    <Text style={styles.buttonText}>인증 새로고침</Text>
-                  </Pressable>
-                ) : (
-                  <Pressable
-                    style={[styles.inlineButton, styles.confirmedButton]}
-                    onPress={handleEmailUpdate}
-                  >
-                    <Text style={styles.buttonText}>수정</Text>
-                  </Pressable>
-                )
+                <Pressable style={styles.inlineButton} onPress={handleReloadUser}>
+                  <Text style={styles.buttonText}>새로고침</Text>
+                </Pressable>
               )}
             </View>
           </View>
           <View style={styles.divider} />
-
-          {/* 비밀번호 수정 세트 */}
+          {/* 비밀번호 변경 */}
           <View style={styles.infoGroup}>
             <Text style={styles.label}>비밀번호</Text>
             <View style={styles.inputButtonRowColumn}>
@@ -227,10 +242,10 @@ export default function EditInfoScreen() {
                 onChangeText={setPasswordConfirm}
                 secureTextEntry
               />
-              <Pressable style={styles.fullButton} onPress={handlePasswordUpdate}>
-                <Text style={styles.buttonText}>비밀번호 변경</Text>
-              </Pressable>
             </View>
+            <Pressable style={styles.fullButton} onPress={handlePasswordUpdate}>
+              <Text style={styles.buttonText}>비밀번호 변경</Text>
+            </Pressable>
           </View>
         </View>
       )}
@@ -240,8 +255,33 @@ export default function EditInfoScreen() {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: "#FEF6F0" },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    backgroundColor: "#FFF",
+    borderBottomWidth: 1,
+    borderBottomColor: "#EEE",
+  },
+  headerIconLeft: {
+    width: 36,
+    alignItems: "flex-start",
+    justifyContent: "center",
+  },
+  headerLogoTitle: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+    marginLeft: 4,
+  },
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: "bold",
+    color: "#6B4B39",
+  },
   container: { flex: 1, padding: 20 },
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
   infoGroup: { marginBottom: 0 },
   label: {
     fontSize: 16,
@@ -269,8 +309,8 @@ const styles = StyleSheet.create({
     marginBottom: 0,
   },
   inputButtonRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
   },
   inlineButton: {
@@ -281,9 +321,6 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     alignItems: "center",
     justifyContent: "center",
-  },
-  confirmedButton: {
-    backgroundColor: "#4CAF50",
   },
   inputButtonRowColumn: {
     flexDirection: "column",

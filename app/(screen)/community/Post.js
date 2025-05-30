@@ -9,7 +9,7 @@ import {
   remove,
   update,
 } from "firebase/database";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Alert,
   BackHandler,
@@ -26,6 +26,7 @@ import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import CustomHeader from "../../../components/CustomHeader";
 import app from "../../../firebase/firebase.client";
 
+// 날짜 포맷 함수
 function formatDate(ts) {
   const d = new Date(ts);
   const MM = (d.getMonth() + 1).toString().padStart(2, "0");
@@ -44,6 +45,7 @@ const PostDetailScreen = () => {
   const [loading, setLoading] = useState(true);
   const auth = getAuth(app);
 
+  // [라우터: 뒤로가기 커스텀]
   useEffect(() => {
     const backHandler = BackHandler.addEventListener(
       "hardwareBackPress",
@@ -55,6 +57,7 @@ const PostDetailScreen = () => {
     return () => backHandler.remove();
   }, [router]);
 
+  // [기능: 게시글 데이터 및 댓글 실시간 구독]
   useEffect(() => {
     const db = getDatabase(app);
     const postRef = ref(db, `posts/${postId}`);
@@ -89,6 +92,7 @@ const PostDetailScreen = () => {
     return () => unsubscribe();
   }, [postId]);
 
+  // [기능: 게시글 삭제]
   const handleDeletePost = async () => {
     if (!auth.currentUser) return;
     if (post.author.uid !== auth.currentUser.uid) {
@@ -110,6 +114,7 @@ const PostDetailScreen = () => {
     ]);
   };
 
+  // [기능: 댓글 작성]
   const handleComment = async () => {
     if (!comment.trim()) return;
     if (!auth.currentUser) {
@@ -136,6 +141,7 @@ const PostDetailScreen = () => {
     }
   };
 
+  // [기능: 댓글 삭제]
   const handleDeleteComment = async (commentId) => {
     if (!auth.currentUser) return;
     try {
@@ -163,6 +169,7 @@ const PostDetailScreen = () => {
     }
   };
 
+  // [기능: 좋아요]
   const handleLike = async () => {
     if (!auth.currentUser) {
       Alert.alert("알림", "로그인이 필요합니다.");
@@ -182,6 +189,7 @@ const PostDetailScreen = () => {
     }
   };
 
+  // [로딩/에러 처리]
   if (loading) {
     return (
       <SafeAreaView style={styles.safeArea}>
@@ -294,6 +302,7 @@ const PostDetailScreen = () => {
     </SafeAreaView>
   );
 };
+
 export default PostDetailScreen;
 
 const styles = StyleSheet.create({

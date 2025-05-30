@@ -1,16 +1,33 @@
 import { useRouter } from 'expo-router';
-import { getAuth, signOut } from 'firebase/auth';
-import React from 'react';
+import { getAuth, signOut } from "firebase/auth";
+import { getDatabase, onValue, ref } from "firebase/database";
+import { useEffect, useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import CustomHeader from '../../../components/CustomHeader';
-import app from '../../../firebase/firebase.client';
+import app from "../../../firebase/firebase.client";
 
-const ProfileScreen = ()=> {
+const ProfileScreen = () => {
   const router = useRouter();
-  const auth = getAuth(app);
+  const [nickname, setNickname] = useState('Loading...');
 
-  // 로그아웃 버튼 눌렀을 때
+  // [기능] 닉네임 실시간 불러오기
+  useEffect(() => {
+    const auth = getAuth(app);
+    const user = auth.currentUser;
+    if (user) {
+      const db = getDatabase(app);
+      const userRef = ref(db, `users/${user.uid}`);
+      onValue(userRef, (snapshot) => {
+        const data = snapshot.val();
+        setNickname(data?.nickname || data?.username || '닉네임 없음');
+      }, { onlyOnce: true });
+    } else {
+      setNickname('로그인 필요');
+    }
+  }, []);
+
+  // [기능] 로그아웃
   const handleLogout = () => {
     Alert.alert(
       '로그아웃',
@@ -22,12 +39,12 @@ const ProfileScreen = ()=> {
           style: 'destructive',
           onPress: async () => {
             try {
+              const auth = getAuth(app);
               await signOut(auth);
               Alert.alert('로그아웃 되었습니다.');
-              router.replace('/(auth)/login');
-            } catch (error) {
-              console.error('로그아웃 오류:', error);
-              Alert.alert('오류', '로그아웃 중 문제가 발생했습니다.');
+              router.replace('/(auth)/login'); // 질문 코드 스타일로 경로 통일
+            } catch (err) {
+              Alert.alert('오류', '로그아웃에 실패했습니다.');
             }
           },
         },
@@ -40,8 +57,8 @@ const ProfileScreen = ()=> {
     <SafeAreaView style={styles.safeArea}>
       <CustomHeader showIcons={false} title="계정" />
       <View style={styles.container}>
-        {/* 닉네임 표시 (추후 Firebase 연동 시 바인딩 예정) */}
-        <Text style={styles.nickname}>닉네임: book</Text>
+        {/* 닉네임 표시 */}
+        <Text style={styles.nickname}>닉네임: {nickname}</Text>
 
         {/* 관심 장르 관리 버튼 */}
         <Pressable
@@ -67,6 +84,7 @@ const ProfileScreen = ()=> {
           <Text style={styles.buttonText}>내 서재</Text>
         </Pressable>
 
+        {/* 추천 도서 목록 */}
         <Pressable
           style={styles.button}
           onPress={() => router.push('../../(screen)/profile/Recommend')}
@@ -85,6 +103,7 @@ const ProfileScreen = ()=> {
     </SafeAreaView>
   );
 };
+
 export default ProfileScreen;
 
 const styles = StyleSheet.create({

@@ -1,44 +1,107 @@
 import { useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, BackHandler, Pressable, StyleSheet, Text, View, TextInput } from 'react-native';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, BackHandler, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import CustomHeader from '../../../components/CustomHeader';
 
-const CreateChallengeScreen = ()=> {
+import { getAuth } from "firebase/auth";
+import { getDatabase, push, ref, set } from "firebase/database";
+import app from "../../../firebase/firebase.client";
+
+// 목표 기간(일)과 권 수 파싱 함수 (다양한 표현 지원)
+function parseTargetInfo(resultText) {
+  let targetBooks = 10, targetPeriodDays = 30;
+
+  let weekMatch = resultText.match(/(\d+)\s*주\s*동안\s*(\d+)(?:~(\d+))?\s*권/);
+  if (weekMatch) {
+    targetPeriodDays = parseInt(weekMatch[1]) * 7;
+    targetBooks = weekMatch[3] ? parseInt(weekMatch[3]) : parseInt(weekMatch[2]);
+    return { targetBooks, targetPeriodDays };
+  }
+
+  let monthMatch = resultText.match(/(\d+)\s*달\s*동안\s*(\d+)(?:~(\d+))?\s*권/);
+  if (monthMatch) {
+    targetPeriodDays = parseInt(monthMatch[1]) * 30;
+    targetBooks = monthMatch[3] ? parseInt(monthMatch[3]) : parseInt(monthMatch[2]);
+    return { targetBooks, targetPeriodDays };
+  }
+
+  let hanMonthMatch = resultText.match(/한\s*달\s*동안\s*(\d+)(?:~(\d+))?\s*권/);
+  if (hanMonthMatch) {
+    targetPeriodDays = 30;
+    targetBooks = hanMonthMatch[2] ? parseInt(hanMonthMatch[2]) : parseInt(hanMonthMatch[1]);
+    return { targetBooks, targetPeriodDays };
+  }
+
+  let thisWeekMatch = resultText.match(/이번\s*주\s*동안\s*(\d+)(?:~(\d+))?\s*권/);
+  if (thisWeekMatch) {
+    targetPeriodDays = 7;
+    targetBooks = thisWeekMatch[2] ? parseInt(thisWeekMatch[2]) : parseInt(thisWeekMatch[1]);
+    return { targetBooks, targetPeriodDays };
+  }
+
+  let thisMonthMatch = resultText.match(/이번\s*달\s*동안\s*(\d+)(?:~(\d+))?\s*권/);
+  if (thisMonthMatch) {
+    targetPeriodDays = 30;
+    targetBooks = thisMonthMatch[2] ? parseInt(thisMonthMatch[2]) : parseInt(thisMonthMatch[1]);
+    return { targetBooks, targetPeriodDays };
+  }
+
+  let weekRangeMatch = resultText.match(/(\d+)\s*주\s*동안\s*(\d+)\s*~\s*(\d+)\s*권/);
+  if (weekRangeMatch) {
+    targetPeriodDays = parseInt(weekRangeMatch[1]) * 7;
+    targetBooks = parseInt(weekRangeMatch[3]);
+    return { targetBooks, targetPeriodDays };
+  }
+
+  let weekPeriodRangeMatch = resultText.match(/(\d+)\s*~\s*(\d+)\s*주\s*동안\s*(\d+)\s*권/);
+  if (weekPeriodRangeMatch) {
+    targetPeriodDays = parseInt(weekPeriodRangeMatch[2]) * 7;
+    targetBooks = parseInt(weekPeriodRangeMatch[3]);
+    return { targetBooks, targetPeriodDays };
+  }
+
+  let weekShortMatch = resultText.match(/(\d+)\s*주\s*간\s*(\d+)(?:~(\d+))?\s*권/);
+  if (weekShortMatch) {
+    targetPeriodDays = parseInt(weekShortMatch[1]) * 7;
+    targetBooks = weekShortMatch[3] ? parseInt(weekShortMatch[3]) : parseInt(weekShortMatch[2]);
+    return { targetBooks, targetPeriodDays };
+  }
+
+  return { targetBooks, targetPeriodDays };
+}
+
+const CreateChallengeScreen = () => {
   const router = useRouter();
   const [selectedLevel, setSelectedLevel] = useState('초급');
-  const [objective, setObjective] = useState('');
-  const [duration, setDuration] = useState(4);
   const [challengeResult, setChallengeResult] = useState('');
   const [loading, setLoading] = useState(false);
   const [previewChallenge, setPreviewChallenge] = useState('');
-
   const level = ['초급', '중급', '고급'];
 
+  // 뒤로가기: 항상 challenge 탭으로 이동
   useEffect(() => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
       router.push('/(tabs)/challenge');
       return true;
     });
-
     return () => backHandler.remove();
   }, [router]);
 
+  // 난이도 변경 시 미리보기
   const getPreviewChallenge = async (level) => {
     try {
       setLoading(true);
-      const response = await fetch('http://192.168.0.16:5000/generate-challenge', {
+      const response = await fetch('http://211.108.99.224:5000/generate-challenge', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ level }),
       });
-
       const data = await response.json();
       setPreviewChallenge(data.result);
       setLoading(false);
     } catch (error) {
       setLoading(false);
-      console.error('Error:', error);
       setPreviewChallenge('서버 오류가 발생했습니다.');
     }
   };
@@ -47,62 +110,87 @@ const CreateChallengeScreen = ()=> {
     getPreviewChallenge(selectedLevel);
   }, [selectedLevel]);
 
+  // 챌린지 생성 및 파이어베이스 저장
   const generateChallenge = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://192.168.0.16:5000/generate-challenge', {
+      const response = await fetch('http://211.108.99.224:5000/generate-challenge', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ level: selectedLevel }),
       });
-
-  
       const data = await response.json();
       setChallengeResult(data.result);
+
+      // 목표 파싱
+      const { targetBooks, targetPeriodDays } = parseTargetInfo(data.result);
+
+      // 파이어베이스에 챌린지 저장
+      const auth = getAuth(app);
+      const user = auth.currentUser;
+      if (!user) {
+        setLoading(false);
+        setChallengeResult('로그인이 필요합니다.');
+        return;
+      }
+      const db = getDatabase(app);
+      const challengesRef = ref(db, `users/${user.uid}/challenges`);
+      const newChallengeRef = push(challengesRef);
+      const newId = newChallengeRef.key;
+      const now = new Date().toISOString();
+
+      await set(newChallengeRef, {
+        level: selectedLevel,
+        result: data.result,
+        targetBooks,
+        targetPeriodDays,
+        createdAt: now,
+        progress: 0
+      });
+
       setLoading(false);
-      console.log(selectedLevel, data.result);
+
+      // Challenge 화면으로 이동 (파라미터 전달)
       router.push({
-        pathname:'../challenge/Challenge',
-        params:{
-        level:selectedLevel,
-        result: encodeURIComponent(data.result), 
+        pathname: '../challenge/Challenge',
+        params: {
+          level: selectedLevel,
+          result: encodeURIComponent(data.result),
+          challengeId: newId,
+          targetBooks: targetBooks,
+          targetPeriodDays: targetPeriodDays
         },
-      })
+      });
     } catch (error) {
       setLoading(false);
-      console.error('Error:', error);
       setChallengeResult('서버 오류가 발생했습니다.');
     }
   };
 
-
   return (
     <SafeAreaView style={styles.safeArea}>
       <CustomHeader showBack title="새로운 챌린지" showIcons={false} />
-      
       <View style={styles.container}>
         <Text style={styles.sectionTitle}>🔥 {selectedLevel} 난이도</Text>
-        
         <View style={styles.levelContainer}>
-          {level.map((level) => (
+          {level.map((lv) => (
             <Pressable
-              key={level}
+              key={lv}
               style={[
                 styles.levelButton,
-                selectedLevel === level && styles.levelButtonActive
+                selectedLevel === lv && styles.levelButtonActive
               ]}
-              onPress={() => setSelectedLevel(level)}
+              onPress={() => setSelectedLevel(lv)}
             >
               <Text style={[
                 styles.levelText,
-                selectedLevel === level && styles.levelTextActive
+                selectedLevel === lv && styles.levelTextActive
               ]}>
-                {level} 난이도
+                {lv} 난이도
               </Text>
             </Pressable>
           ))}
         </View>
-
         <View style={styles.previewContainer}>
           <Text style={styles.previewTitle}>챌린지 미리보기</Text>
           {loading ? (
@@ -111,14 +199,16 @@ const CreateChallengeScreen = ()=> {
             <Text style={styles.previewText}>{previewChallenge}</Text>
           )}
         </View>
-
-        <Pressable style={styles.createButton} onPress={generateChallenge}>
-          <Text style={styles.createButtonText}>챌린지 시작하기</Text>
+        <Pressable style={styles.createButton} onPress={generateChallenge} disabled={loading}>
+          <Text style={styles.createButtonText}>
+            {loading ? '생성 중...' : '챌린지 시작하기'}
+          </Text>
         </Pressable>
       </View>
     </SafeAreaView>
   );
 };
+
 export default CreateChallengeScreen;
 
 const styles = StyleSheet.create({
@@ -195,4 +285,4 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-}); 
+});

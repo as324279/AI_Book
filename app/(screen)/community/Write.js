@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, StyleSheet, Pressable, Image, ScrollView, Alert, BackHandler } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import * as ImagePicker from 'expo-image-picker';
-import { getDatabase, ref, get, push, set } from "firebase/database";
+import { useRouter } from 'expo-router';
 import { getAuth } from "firebase/auth";
-import app from "../../../firebase/firebase.client"
+import { get, getDatabase, push, ref, set } from "firebase/database";
+import { useEffect, useState } from 'react';
+import { Alert, BackHandler, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import CustomHeader from '../../../components/CustomHeader';
+import app from "../../../firebase/firebase.client";
 
 const WritePostScreen = ()=> {
   const router = useRouter();
@@ -16,8 +16,9 @@ const WritePostScreen = ()=> {
   const [image, setImage] = useState(null);
   const [category, setCategory] = useState('자유');
   const categories = ['추천', '자유', '리뷰'];
-   const auth = getAuth(app);
+  const auth = getAuth(app);
 
+  // 라우터: 뒤로가기 시 커뮤니티 탭으로 이동
   useEffect(() => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
       router.push('/(tabs)/community');
@@ -26,20 +27,22 @@ const WritePostScreen = ()=> {
     return () => backHandler.remove();
   }, [router]);
 
+  // 이미지 선택 기능
   const pickImage = async () => {
     try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: 'Images',
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 1,
-      });
-      if (!result.canceled) setImage(result.assets[0].uri);
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+    if (!result.canceled) { setImage(result.assets[0].uri); }
     } catch (error) {
       Alert.alert('오류', '이미지를 선택하는 중 문제가 발생했습니다.');
     }
   };
 
+  // 게시글 등록 기능
   const handleSubmit = async () => {
     if (!title.trim()) {
       Alert.alert('알림', '제목을 입력해주세요.');
@@ -51,7 +54,6 @@ const WritePostScreen = ()=> {
     }
     try {
       const db = getDatabase(app);
-     const auth = getAuth(app);
       const userRef = ref(db, `users/${auth.currentUser.uid}`);
       const userSnap = await get(userRef);
       const nickname = userSnap.val()?.nickname || '알 수 없음';
@@ -72,7 +74,7 @@ const WritePostScreen = ()=> {
         timestamp: Date.now()
       });
       Alert.alert('성공', '게시글이 등록되었습니다!');
-      router.push('../../(tabs)/community');
+      router.push('/(tabs)/community'); // paste-2 스타일로 push 경로 통일
     } catch (error) {
       Alert.alert('오류', error.message);
     }
@@ -84,13 +86,28 @@ const WritePostScreen = ()=> {
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.categoryContainer}>
           {categories.map((cat) => (
-            <Pressable key={cat} style={[styles.categoryButton, category === cat && styles.categoryButtonActive]} onPress={() => setCategory(cat)}>
+            <Pressable
+              key={cat}
+              style={[styles.categoryButton, category === cat && styles.categoryButtonActive]}
+              onPress={() => setCategory(cat)}
+            >
               <Text style={[styles.categoryText, category === cat && styles.categoryTextActive]}>{cat}</Text>
             </Pressable>
           ))}
         </View>
-        <TextInput style={styles.titleInput} placeholder="제목을 입력하세요" value={title} onChangeText={setTitle} />
-        <TextInput style={styles.contentInput} placeholder="내용을 입력하세요" value={content} onChangeText={setContent} multiline />
+        <TextInput
+          style={styles.titleInput}
+          placeholder="제목을 입력하세요"
+          value={title}
+          onChangeText={setTitle}
+        />
+        <TextInput
+          style={styles.contentInput}
+          placeholder="내용을 입력하세요"
+          value={content}
+          onChangeText={setContent}
+          multiline
+        />
         <View style={styles.imageContainer}>
           {image ? (
             <>
@@ -113,6 +130,7 @@ const WritePostScreen = ()=> {
     </SafeAreaView>
   );
 }
+
 export default WritePostScreen;
 
 const styles = StyleSheet.create({
@@ -219,10 +237,9 @@ const styles = StyleSheet.create({
   disabledButton: {
     backgroundColor: '#CCC',
   },
-
   submitButtonText: {
     color: '#FFF',
     fontSize: 16,
     fontWeight: 'bold',
   },
-}); 
+});

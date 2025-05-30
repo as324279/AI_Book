@@ -1,7 +1,7 @@
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import axios from 'axios';
 import { useRouter } from 'expo-router';
-import React, { useState, } from 'react';
+import { useState } from 'react';
 import {
   Image,
   Pressable,
@@ -10,41 +10,35 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View
+  View,
 } from 'react-native';
- 
 
-
-const BookSearchScreen = ()=> {
+const BookSearchScreen = () => {
   const [query, setQuery] = useState('');
   const [books, setBooks] = useState([]);
   const [error, setError] = useState('');
   const router = useRouter();
 
+  // [기능] 책 검색 API 호출 및 결과 파싱
   const fetchBooks = async () => {
     if (!query) {
       setError('검색어를 입력해주세요.');
       return;
     }
     try {
-        const url = `http://211.108.99.224:5000/search-books?q=${encodeURIComponent(query)}`;
-        const response = await axios.get(url);
-        // console.log("📦 받아온 응답:", response.data);
-        // console.log("📚 books 배열:", response.data.books);
+      const url = `http://211.108.99.224:5000/search-books?q=${encodeURIComponent(query)}`;
+      const response = await axios.get(url);
 
       if (response.data.books && response.data.books.length > 0) {
-        const bookList = response.data.books.map((item,index) => {
-          
-          return {
-            id: index.toString(),
-            title: item.title || '제목 없음',
-            authors: Array.isArray(item.authors) ? item.authors.join(', ') : item.authors || '저자 정보 없음',
-            thumbnail: item.thumbnail || null,
-            publisher: item.publisher || '',
-            publishedDate: item.publishedDate || '',
-            description: item.description || '',
-          };
-        });
+        const bookList = response.data.books.map((item, index) => ({
+          id: index.toString(),
+          title: item.title || '제목 없음',
+          authors: Array.isArray(item.authors) ? item.authors.join(', ') : item.authors || '저자 정보 없음',
+          thumbnail: item.thumbnail || null,
+          publisher: item.publisher || '',
+          publishedDate: item.publishedDate || '',
+          description: item.description || '',
+        }));
         setBooks(bookList);
         setError('');
       } else {
@@ -58,27 +52,30 @@ const BookSearchScreen = ()=> {
   };
 
   return (
-    <View style = {styles.container}>
-        <Pressable onPress = {()=>router.push('/(tabs)/MainHome')}>
-            <MaterialIcons  name = "arrow-back-ios" size = {20} color = '#000'/>
-        </Pressable>
-        <Text style={styles.title}>📚 BookMark</Text>  
+    <View style={styles.container}>
+      {/* [라우터] 뒤로가기: MainHome으로 이동 */}
+      <Pressable onPress={() => router.replace('./MainHome')}>
+        <MaterialIcons name="arrow-back-ios" size={20} color="#000" />
+      </Pressable>
+      <Text style={styles.title}>📚 BookMark</Text>
 
-        <View style={styles.searchContainer}>
+      {/* [스타일] 검색창 */}
+      <View style={styles.searchContainer}>
         <TextInput
-        style={styles.searchInput}
-         placeholder="책 제목을 입력하세요"
-        value={query}
-        onChangeText={setQuery}
-        onSubmitEditing={fetchBooks}
+          style={styles.searchInput}
+          placeholder="책 제목을 입력하세요"
+          value={query}
+          onChangeText={setQuery}
+          onSubmitEditing={fetchBooks}
         />
         <TouchableOpacity onPress={fetchBooks}>
-        <Ionicons name="search" size={24} color="#333" />
+          <Ionicons name="search" size={24} color="#333" />
         </TouchableOpacity>
-        </View>
-        
-      {error && <Text style={styles.error}>{error}</Text>}
+      </View>
 
+      {error ? <Text style={styles.error}>{error}</Text> : null}
+
+      {/* [스타일] 책 목록: 그리드 */}
       <ScrollView contentContainerStyle={styles.bookGrid}>
         {books.map((book) => (
           <TouchableOpacity
@@ -112,7 +109,8 @@ const BookSearchScreen = ()=> {
       </ScrollView>
     </View>
   );
-}
+};
+
 export default BookSearchScreen;
 
 const styles = StyleSheet.create({
@@ -140,7 +138,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     paddingVertical: 10,
-    color:'black'
+    color: 'black',
   },
   error: {
     color: 'red',

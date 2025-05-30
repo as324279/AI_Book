@@ -1,57 +1,55 @@
 import * as ImageManipulator from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
-import React from 'react';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import CustomHeader from '../../components/CustomHeader';
 
-const MainHome = () =>{
+const MainHome = () => {
+  const router = useRouter();
 
-    const router = useRouter();
+  // [기능] 책 표지 촬영 및 리사이즈, CameraScreen으로 이동
+  const takePicture = async () => {
+    try {
+      const result = await ImagePicker.launchCameraAsync({
+        allowsEditing: true,
+        quality: 0.5,
+      });
 
-    const takePicture = async () => {
-        try {
-          const result = await ImagePicker.launchCameraAsync({
-            allowsEditing: true,
-            quality: 0.5,
-          });
-    
-          if (!result.canceled) {
-            const processedImage = await ImageManipulator.manipulateAsync(
-              result.assets[0].uri,
-              [{ resize: { width: 1024 } }],
-              { compress: 0.9, format: ImageManipulator.SaveFormat.JPEG }
-            );
-    
-            //  촬영된 이미지 경로 CameraScreen화면으로 넘기기
-            router.push({
-              pathname: './CameraScreen',
-              params: { imageUri: processedImage.uri },
-            });
-          }
-        } catch (error) {
-          console.error('카메라 오류:', error);
-          Alert.alert('오류', '카메라를 실행할 수 없습니다.');
-        }
-      };
+      if (!result.canceled) {
+        const processedImage = await ImageManipulator.manipulateAsync(
+          result.assets[0].uri,
+          [{ resize: { width: 1024 } }],
+          { compress: 0.9, format: ImageManipulator.SaveFormat.JPEG }
+        );
 
-    return(
-        <SafeAreaView style={styles.safeArea} edges={['top']}>
-          <CustomHeader
-            showBack={false}
-            showIcons={true}
-            title="BOOKMARK"
-            onPressSearch={() => router.push('/(screen)/BookSearch')}
-          /> 
+        // 촬영된 이미지 경로 CameraScreen화면으로 넘기기
+        router.push({
+          pathname: './CameraScreen',
+          params: { imageUri: processedImage.uri },
+        });
+      }
+    } catch (error) {
+      console.error('카메라 오류:', error);
+      Alert.alert('오류', '카메라를 실행할 수 없습니다.');
+    }
+  };
 
-        <View style = {styles.body}>
-            <Pressable style = {styles.Button} onPress = {takePicture}>
-                <Text style = {styles.captureText}>책 표지 촬영</Text>
-            </Pressable>
-          </View>
-        </SafeAreaView>
-    )
+  return (
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <CustomHeader
+        showBack={false}
+        showIcons={true}
+        title="BOOKMARK"
+        onPressSearch={() => router.push('/(screen)/BookSearch')}
+      />
+      <View style={styles.body}>
+        <Pressable style={styles.Button} onPress={takePicture}>
+          <Text style={styles.captureText}>책 표지 촬영</Text>
+        </Pressable>
+      </View>
+    </SafeAreaView>
+  );
 };
 
 export default MainHome;
@@ -88,7 +86,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderColor: '#ddd',
     backgroundColor: '#FFF4E9',
-    marginTop:30
+    marginTop: 30,
   },
   tabItem: {
     alignItems: 'center',

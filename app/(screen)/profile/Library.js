@@ -1,35 +1,89 @@
-import { useRouter } from "expo-router";
-import React, { useEffect } from "react";
-import { BackHandler, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useNavigation } from '@react-navigation/native';
+import { getAuth } from "firebase/auth";
+import { getDatabase, onValue, ref } from "firebase/database";
+import React, { useEffect, useState } from "react";
+import { BackHandler, Pressable, ScrollView, StyleSheet, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import CustomHeader from "../../../components/CustomHeader";
+import app from "../../../firebase/firebase.client";
 
-const LibraryScreen = ()=> {
-  const router = useRouter();
+const LibraryScreen = () => {
+  const navigation = useNavigation();
+  const [books, setBooks] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-      const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-        router.push('/(tabs)/profile');
-        return true; 
-      });
-    
-      return () => backHandler.remove();
-    }, [router]);
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+      navigation.navigate('../../(screen)/profile');
+      return true;
+    });
+
+    // Firebase에서 저장된 도서 불러오기
+    const loadBooks = async () => {
+      const auth = getAuth(app);
+      const user = auth.currentUser;
+
+      if (user) {
+        const db = getDatabase(app);
+        const userBooksRef = ref(db, `users/${user.uid}/books`);
+        
+        onValue(userBooksRef, (snapshot) => {
+          const data = snapshot.val();
+          if (data) {
+            const bookList = Object.entries(data).map(([id, book]) => ({
+              id,
+              ...book
+            }));
+            setBooks(bookList);
+          }
+          setLoading(false);
+        });
+      } else {
+        setLoading(false);
+      }
+    };
+
+    loadBooks();
+    return () => backHandler.remove();
+  }, []);
+
+  // 책 상세 페이지로 이동
+  const handleBookPress = (book) => {
+    navigation.navigate('BookDetail', {
+      title: book.title,
+      authors: book.authors,
+      publisher: book.publisher,
+      publishedDate: book.publishedDate,
+      description: book.description,
+      thumbnail: book.thumbnail || ''
+    });
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <CustomHeader showBack showIcons={false} title="내 서재" />
+      <CustomHeader title="내 서재" />
       <ScrollView style={styles.container}>
-        <View style={styles.bookCard}>
-          <Text style={styles.bookTitle}>지적 대화를 위한 넓고 얕은 지식</Text>
-        </View>
-        <View style={styles.bookCard}>
-          <Text style={styles.bookTitle}>날씨와 사랑</Text>
-        </View>
+        {loading ? (
+          <Text style={styles.message}>로딩 중...</Text>
+        ) : books.length === 0 ? (
+          <Text style={styles.message}>저장된 책이 없습니다.</Text>
+        ) : (
+          books.map(book => (
+            <Pressable 
+              key={book.id} 
+              style={styles.bookCard}
+              onPress={() => handleBookPress(book)}
+            >
+              <Text style={styles.bookTitle}>{book.title}</Text>
+              <Text style={styles.bookAuthor}>{book.authors}</Text>
+            </Pressable>
+          ))
+        )}
       </ScrollView>
     </SafeAreaView>
   );
-}
+};
+
 export default LibraryScreen;
 
 const styles = StyleSheet.create({
