@@ -2,22 +2,22 @@ import { useNavigation } from '@react-navigation/native';
 import { getAuth } from "firebase/auth";
 import { getDatabase, onValue, ref } from "firebase/database";
 import React, { useEffect, useState } from "react";
-import { BackHandler, Pressable, ScrollView, StyleSheet, Text } from "react-native";
+import { BackHandler, Pressable, ScrollView, StyleSheet, Text, Image, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import CustomHeader from "../../../components/CustomHeader";
 import app from "../../../firebase/firebase.client";
+import { useRouter } from "expo-router"
 
 const LibraryScreen = () => {
-  const navigation = useNavigation();
+  const router = useRouter();
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-      navigation.navigate('../../(screen)/profile');
-      return true;
-    });
-
+      const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+        router.push("/(tabs)/profile");
+        return true;
+      });
     // Firebase에서 저장된 도서 불러오기
     const loadBooks = async () => {
       const auth = getAuth(app);
@@ -49,33 +49,47 @@ const LibraryScreen = () => {
 
   // 책 상세 페이지로 이동
   const handleBookPress = (book) => {
-    navigation.navigate('BookDetail', {
-      title: book.title,
-      authors: book.authors,
-      publisher: book.publisher,
-      publishedDate: book.publishedDate,
-      description: book.description,
-      thumbnail: book.thumbnail || ''
+    router.push({
+      pathname: "/BookDetail",
+      params: {
+        title: book.title,
+        authors: book.authors,
+        publisher: book.publisher,
+        publishedDate: book.publishedDate,
+        description: book.description,
+        thumbnail: book.thumbnail || "",
+      },
     });
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <CustomHeader title="내 서재" />
+      <CustomHeader showBack showIcons={false} title="내 서재" />
       <ScrollView style={styles.container}>
         {loading ? (
           <Text style={styles.message}>로딩 중...</Text>
         ) : books.length === 0 ? (
           <Text style={styles.message}>저장된 책이 없습니다.</Text>
         ) : (
-          books.map(book => (
-            <Pressable 
-              key={book.id} 
+          books.map((book) => (
+            <Pressable
+              key={book.id}
               style={styles.bookCard}
               onPress={() => handleBookPress(book)}
             >
-              <Text style={styles.bookTitle}>{book.title}</Text>
-              <Text style={styles.bookAuthor}>{book.authors}</Text>
+              <View style={styles.bookRow}>
+                {book.thumbnail ? (
+                  <Image
+                    source={{ uri: book.thumbnail }}
+                    style={styles.bookThumbnail}
+                    resizeMode="cover"
+                  />
+                ) : null}
+                <View style={styles.bookInfo}>
+                  <Text style={styles.bookTitle}>{book.title}</Text>
+                  <Text style={styles.bookAuthor}>{book.authors}</Text>
+                </View>
+              </View>
             </Pressable>
           ))
         )}
@@ -110,5 +124,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "500",
     color: "#333",
+  },
+  bookRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  bookThumbnail: {
+    width: 60,
+    height: 90,
+    borderRadius: 4,
+    marginRight: 12,
+    backgroundColor: "#eee",
+  },
+  bookInfo: {
+    flexShrink: 1,
   },
 });

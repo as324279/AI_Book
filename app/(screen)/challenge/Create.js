@@ -92,7 +92,7 @@ const CreateChallengeScreen = () => {
   const getPreviewChallenge = async (level) => {
     try {
       setLoading(true);
-      const response = await fetch('http://211.108.99.224:5000/generate-challenge', {
+      const response = await fetch('http://192.168.0.16:5000/generate-challenge', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ level }),

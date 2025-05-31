@@ -1,7 +1,7 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { getAuth } from 'firebase/auth';
 import { get, getDatabase, push, ref } from 'firebase/database';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Alert,
   Image,
@@ -17,6 +17,7 @@ import app from '../../firebase/firebase.client';
 const BookDetail = () => {
   const router = useRouter();
   const params = useLocalSearchParams();
+  const [isAlreadySaved, setIsAlreadySaved] = useState(false);
   
   // 파라미터 추출
   const {
@@ -78,6 +79,33 @@ const BookDetail = () => {
     }
   };
 
+  useEffect(() => {
+    const checkDuplicate = async () => {
+      try {
+        const auth = getAuth(app);
+        const user = auth.currentUser;
+  
+        if (!user) return;
+  
+        const db = getDatabase(app);
+        const userBooksRef = ref(db, `users/${user.uid}/books`);
+        const snapshot = await get(userBooksRef);
+  
+        if (snapshot.exists()) {
+          snapshot.forEach((child) => {
+            if (child.val().title === title) {
+              setIsAlreadySaved(true);
+            }
+          });
+        }
+      } catch (error) {
+        console.error("중복 확인 중 오류:", error);
+      }
+    };
+  
+    checkDuplicate();
+  }, []);
+
   return (
     <View style={styles.screen}>
       <View style={styles.header}>
@@ -105,13 +133,14 @@ const BookDetail = () => {
             <Text>개요: {description}</Text>
           </View>
         </View>
+        {!isAlreadySaved && (
+        <View style={styles.footer}>
+          <Pressable style={styles.saveButton} onPress={saveToLibrary}>
+            <Text style={styles.saveButtonText}>내 서재에 담기</Text>
+          </Pressable>
+        </View>
+        )}
       </ScrollView>
-
-      <View style={styles.footer}>
-        <Pressable style={styles.saveButton} onPress={saveToLibrary}>
-          <Text style={styles.saveButtonText}>내 서재에 담기</Text>
-        </Pressable>
-      </View>
     </View>
   );
 };

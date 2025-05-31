@@ -26,7 +26,7 @@ const BookSearchScreen = () => {
       return;
     }
     try {
-      const url = `http://211.108.99.224:5000/search-books?q=${encodeURIComponent(query)}`;
+      const url = `http://192.168.0.16:5000/search-books?q=${encodeURIComponent(query)}`;
       const response = await axios.get(url);
 
       if (response.data.books && response.data.books.length > 0) {
@@ -54,7 +54,7 @@ const BookSearchScreen = () => {
   return (
     <View style={styles.container}>
       {/* [라우터] 뒤로가기: MainHome으로 이동 */}
-      <Pressable onPress={() => router.replace('./MainHome')}>
+      <Pressable onPress={() => router.replace('/(tabs)/MainHome')}>
         <MaterialIcons name="arrow-back-ios" size={20} color="#000" />
       </Pressable>
       <Text style={styles.title}>📚 BookMark</Text>

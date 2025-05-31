@@ -5,7 +5,7 @@ import { ActivityIndicator, Alert, Image, Pressable, ScrollView, StyleSheet, Tex
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
 // 각자 개인의 와이파이 주소로 사용 -> 핸드폰과 노트북 와이파이가 일치해야 함.
-const EXPRESS_SERVER_URL = 'http://211.108.99.224:5000';
+const EXPRESS_SERVER_URL = 'http://192.168.0.16:5000';
 
 const CameraScreen = () => {
   const { imageUri } = useLocalSearchParams();
