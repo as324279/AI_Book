@@ -27,6 +27,8 @@ const { summarizeText } = require("./utils/summarizer");
 const generateChallengeRouter = require("./route/generateChallenge");
 app.use("/generate-challenge", generateChallengeRouter);
 
+const RecommendBook = require('./route/RecommendBook');
+
 const client = new vision.ImageAnnotatorClient({
   keyFilename: "united-blend-419210-1b5b6a547901.json",
 });
@@ -129,7 +131,7 @@ app.post("/ocr", upload.single("image"), async (req, res) => {
       }
     }
 
-    // const summary = await summarizeText(bestDescription);
+     const summary = await summarizeText(bestDescription);
 
     fs.unlink(imagePath, () => {});
     res.json({
@@ -140,11 +142,12 @@ app.post("/ocr", upload.single("image"), async (req, res) => {
       candidates,
       clova_text: fullText,
       description: bestDescription,
-      // summary,
+       summary,
       thumbnail: bestThumbnail,
       authors: bestAuthors,
       publisher: bestPublisher,
       publishedDate: bestPublishedDate,
+      isbn13: bestIsbn13 
     });
   } catch (e) {
     console.error("OCR 처리 오류:", e);
@@ -186,8 +189,10 @@ app.get("/search", async (req, res) => {
   }
 });
 
+app.use('/', RecommendBook);
+
 
 const PORT = 5000;
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`🚀 서버 실행 중: http://192.168.219.101:${PORT}`);
+  console.log(`🚀 서버 실행 중: http://192.168.219.103:${PORT}`);
 });
