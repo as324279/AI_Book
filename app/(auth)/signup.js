@@ -1,8 +1,8 @@
 import { useRouter } from 'expo-router';
-import { createUserWithEmailAndPassword, getAuth, onAuthStateChanged, sendEmailVerification } from "firebase/auth";
+import { createUserWithEmailAndPassword, getAuth, onAuthStateChanged, sendEmailVerification, signOut } from "firebase/auth";
 import { get, getDatabase, ref, set } from "firebase/database";
 import { useEffect, useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import app from '../../firebase/firebase.client';
 
 const SignupScreen = ()=> {
@@ -13,21 +13,38 @@ const SignupScreen = ()=> {
   const [isEmailSent, setIsEmailSent] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
   const [uid, setUid] = useState(null);
+  const [initializing, setInitializing] = useState(true); // [추가] 초기화 상태
+
   const router = useRouter();
   const auth = getAuth(app);
 
-  // 이메일 인증 상태 실시간 감지 (앱 최초 실행 시)
+  // [수정] 진입 시 이미 로그인된 사용자가 있으면 로그아웃하고, 로그아웃이 끝난 후에만 onAuthStateChanged 구독
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setUid(user.uid);
-        setIsVerified(user.emailVerified);
-        if (user.emailVerified) {
-          Alert.alert('인증 완료', '이메일 인증이 완료되었습니다!');
-        }
+    let unsubscribe;
+    const checkAndLogout = async () => {
+      if (auth.currentUser) {
+        await signOut(auth);
       }
-    });
-    return () => unsubscribe();
+      // 로그아웃이 끝난 뒤에만 구독 시작
+      unsubscribe = onAuthStateChanged(auth, (user) => {
+        if (user) {
+          setUid(user.uid);
+          setIsVerified(user.emailVerified);
+          if (user.emailVerified) {
+            Alert.alert('인증 완료', '이메일 인증이 완료되었습니다!');
+          }
+        } else {
+          setUid(null);
+          setIsVerified(false);
+        }
+        setInitializing(false); // 초기화 끝
+      });
+    };
+    checkAndLogout();
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, []);
 
   // 인증 메일 발송 핸들러
@@ -39,6 +56,7 @@ const SignupScreen = ()=> {
       if (password !== confirm) {
         return Alert.alert('비밀번호가 일치하지 않습니다.');
       }
+
       // 닉네임 중복 체크
       const db = getDatabase(app);
       const snapshot = await get(ref(db, 'users'));
@@ -47,12 +65,15 @@ const SignupScreen = ()=> {
       if (nicknameExists) {
         return Alert.alert('이미 사용 중인 닉네임입니다.');
       }
+
       // 계정 생성
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       setUid(user.uid);
+
       // 닉네임 저장
       await set(ref(db, `users/${user.uid}`), { nickname, email });
+
       // 인증 메일 발송
       await sendEmailVerification(user);
       setIsEmailSent(true);
@@ -90,22 +111,29 @@ const SignupScreen = ()=> {
       params: { uid }
     });
   };
-  
+
+  // [추가] 초기화 중일 때는 로딩 표시
+  if (initializing) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color="#6B4B39" />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
       <Pressable onPress={() => router.back()} style={styles.backButton}>
-        <Text style={styles.backButtonText}>&lt;</Text>
+        <Text style={styles.backButtonText}>{"<"}</Text>
       </Pressable>
       <Text style={styles.title}>회원가입</Text>
-
       <TextInput
         style={styles.input}
         placeholder="닉네임"
         value={nickname}
         onChangeText={setNickname}
+        autoCapitalize="none"
       />
-
       <View style={styles.emailRow}>
         <TextInput
           style={[styles.input, { flex: 1, marginBottom: 0 }]}
@@ -118,21 +146,20 @@ const SignupScreen = ()=> {
         <Pressable
           style={[
             styles.verifyButton,
-            isEmailSent && styles.disabledButton
+            (!nickname || !email || !password || !confirm) && styles.disabledButton
           ]}
           onPress={handleSendVerification}
-          disabled={isEmailSent}
+          disabled={!nickname || !email || !password || !confirm}
         >
           <Text style={styles.buttonText}>{isEmailSent ? '전송 완료' : '인증 전송'}</Text>
         </Pressable>
       </View>
-
       <TextInput
         style={styles.input}
         placeholder="비밀번호"
-        secureTextEntry
         value={password}
         onChangeText={setPassword}
+        secureTextEntry
       />
       <Text style={styles.passwordHint}>
         비밀번호는 7~12자, 소문자, 숫자, 특수문자를 모두 포함해야 합니다.
@@ -140,31 +167,29 @@ const SignupScreen = ()=> {
       <TextInput
         style={styles.input}
         placeholder="비밀번호 확인"
-        secureTextEntry
         value={confirm}
         onChangeText={setConfirm}
+        secureTextEntry
       />
 
-      {/* 인증 상태 새로고침 버튼 추가 */}
+      {/* 인증 상태 새로고침 버튼 */}
       {isEmailSent && !isVerified && (
-        <Pressable
-          style={styles.reloadButton}
-          onPress={handleReloadUser}
-        >
+        <Pressable style={styles.reloadButton} onPress={handleReloadUser}>
           <Text style={styles.reloadButtonText}>인증 상태 새로고침</Text>
         </Pressable>
       )}
 
       <Pressable
-        style={[styles.button, !isVerified && styles.disabledButton]}
+        style={[styles.button, (!isVerified || !uid) && styles.disabledButton]}
         onPress={handleNext}
-        disabled={!isVerified}
+        disabled={!isVerified || !uid}
       >
         <Text style={styles.buttonText}>다음 단계로</Text>
       </Pressable>
     </View>
   );
 };
+
 export default SignupScreen;
 
 const styles = StyleSheet.create({

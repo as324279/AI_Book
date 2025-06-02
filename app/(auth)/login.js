@@ -101,9 +101,9 @@
 import { useRouter } from 'expo-router';
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { get, ref } from "firebase/database";
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { auth, db } from '../../firebase/firebase.client'
+import { auth, db } from '../../firebase/firebase.client';
 
 
 export default function LoginScreen() {
@@ -139,7 +139,7 @@ export default function LoginScreen() {
         Alert.alert('이메일 인증 필요', '이메일 인증을 완료한 후 로그인할 수 있습니다.');
         return;
       }
-      Alert.alert('로그인 성공!');
+      Alert.alert('환영합니다!', `${nickname} 님!`);
       router.replace('../(tabs)/MainHome');
     } catch (error) {
       Alert.alert('로그인 실패', error.message);
