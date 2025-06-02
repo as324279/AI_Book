@@ -4,8 +4,7 @@ const firebaseConfig = {
   projectId: "bookmark-project-36111",
   storageBucket: "bookmark-project-36111.appspot.com",
   messagingSenderId: "996151460118",
-  appId: "1:996151460118:android:e474dd9748f55d891bd037"
+  appId: "1:996151460118:android:e474dd9748f55d891bd037",
 };
-export default firebaseConfig;
 
-    
+export default firebaseConfig;

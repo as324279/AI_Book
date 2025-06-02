@@ -9,12 +9,15 @@ const path = require("path");
 const bodyParser = require("body-parser");
 const {Configuration,OpenAI} = require("openai")
 const stringSimilarity = require("string-similarity");
-
+const { initializeApp, cert } = require('firebase-admin/app');
+const { getStorage } = require('firebase-admin/storage');
+const adminServiceAccount = require('./bookmark-project-36111-firebase-adminsdk-fbsvc-5a42b29ad4.json');
 
 const app = express();
 app.use(cors());
-app.use(express.json());
-app.use(bodyParser.json());
+app.use(express.json({ limit: '20mb' })); // express.json도 limit 적용
+app.use(bodyParser.json({ limit: '20mb' }));
+app.use(bodyParser.urlencoded({ limit: '20mb', extended: true }));
 
 const GOOGLE_BOOKS_API_KEY = "AIzaSyAnwvS3jcDO610aSMIz2wzfycJAGKFVBA4";
 const ALADIN_API_KEY = "ttbas3242751932001";
@@ -191,8 +194,42 @@ app.get("/search", async (req, res) => {
 
 app.use('/', RecommendBook);
 
+if (!global._firebaseAdminInitialized) {
+  initializeApp({
+    credential: cert(adminServiceAccount),
+    storageBucket: "bookmark-project-36111.firebasestorage.app"
+  });
+  global._firebaseAdminInitialized = true;
+}
+const bucket = getStorage().bucket();
+
+/**
+ * 클라이언트에서 base64와 filename을 POST로 전송하면
+ * Firebase Storage의 image/ 폴더에 업로드하고, 다운로드 URL을 반환
+ */
+app.post('/upload-image-to-storage', async (req, res) => {
+  try {
+    const { base64, filename } = req.body;
+    if (!base64 || !filename) {
+      return res.status(400).json({ error: "base64와 filename이 필요합니다." });
+    }
+    const buffer = Buffer.from(base64, 'base64');
+    const file = bucket.file(`image/${filename}`);
+    await file.save(buffer, { contentType: 'image/jpeg' });
+
+    // 다운로드 URL 생성 (Signed URL)
+    const [url] = await file.getSignedUrl({
+      action: 'read',
+      expires: '03-01-2500'
+    });
+    res.json({ url });
+  } catch (e) {
+    console.error("Firebase Storage 업로드 오류:", e);
+    res.status(500).json({ error: "Firebase Storage 업로드 실패" });
+  }
+});
 
 const PORT = 5000;
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`🚀 서버 실행 중: http://192.168.219.103:${PORT}`);
+  console.log(`🚀 서버 실행 중: http://211.108.99.224:${PORT}`);
 });
