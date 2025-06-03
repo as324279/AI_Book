@@ -26,19 +26,29 @@ const BookSearchScreen = () => {
       return;
     }
     try {
-      const url = `http://192.168.0.16:5000/search-books?q=${encodeURIComponent(query)}`;
-      const response = await axios.get(url);
+        const url = `http://192.168.219.105:5000/search-books?q=${encodeURIComponent(query)}`;
+        const response = await axios.get(url);
+        // console.log("📦 받아온 응답:", response.data);
+        // console.log("📚 books 배열:", response.data.books);
 
       if (response.data.books && response.data.books.length > 0) {
-        const bookList = response.data.books.map((item, index) => ({
-          id: index.toString(),
-          title: item.title || '제목 없음',
-          authors: Array.isArray(item.authors) ? item.authors.join(', ') : item.authors || '저자 정보 없음',
-          thumbnail: item.thumbnail || null,
-          publisher: item.publisher || '',
-          publishedDate: item.publishedDate || '',
-          description: item.description || '',
-        }));
+        const bookList = response.data.books.map((item,index) => {
+          console.log("🔍 isbn13 from book data:", item.isbn13);
+          
+          return {
+            id: index.toString(),
+            title: item.title || '제목 없음',
+            authors: Array.isArray(item.authors) ? item.authors.join(', ') : item.authors || '저자 정보 없음',
+            thumbnail: item.thumbnail || null,
+            publisher: item.publisher || '',
+            publishedDate: item.publishedDate || '',
+            description: item.description || '',
+            categoryName: item.categoryName,
+            isbn13: item.isbn13 || '',
+            summary: item.summary || '',
+          };
+          
+        });
         setBooks(bookList);
         setError('');
       } else {
@@ -91,6 +101,9 @@ const BookSearchScreen = () => {
                   publisher: book.publisher,
                   publishedDate: book.publishedDate,
                   description: book.description,
+                  summary: book.summary,
+                  categoryName:book.categoryName,
+                  isbn13: book.isbn13
                 },
               })
             }
