@@ -13,11 +13,12 @@ const { initializeApp, cert } = require('firebase-admin/app');
 const { getStorage } = require('firebase-admin/storage');
 const adminServiceAccount = require('./bookmark-project-36111-firebase-adminsdk-fbsvc-5a42b29ad4.json');
 
+
 const app = express();
 app.use(cors());
-app.use(express.json({ limit: '20mb' })); // express.json도 limit 적용
-app.use(bodyParser.json({ limit: '20mb' }));
-app.use(bodyParser.urlencoded({ limit: '20mb', extended: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(bodyParser.json({ limit: '10mb' }));
+app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
 
 const GOOGLE_BOOKS_API_KEY = "AIzaSyAnwvS3jcDO610aSMIz2wzfycJAGKFVBA4";
 const ALADIN_API_KEY = "ttbas3242751932001";
@@ -92,6 +93,7 @@ app.post("/ocr", upload.single("image"), async (req, res) => {
     let bestAuthors = [];
     let bestPublisher = "";
     let bestPublishedDate = "";
+    let bestIsbn13 = "";
 
     for (const candidate of candidates) {
       try {
@@ -145,7 +147,7 @@ app.post("/ocr", upload.single("image"), async (req, res) => {
       candidates,
       clova_text: fullText,
       description: bestDescription,
-       summary,
+      summary,
       thumbnail: bestThumbnail,
       authors: bestAuthors,
       publisher: bestPublisher,
@@ -231,5 +233,5 @@ app.post('/upload-image-to-storage', async (req, res) => {
 
 const PORT = 5000;
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`🚀 서버 실행 중: http://211.108.99.224:${PORT}`);
+  console.log(`🚀 서버 실행 중: http://192.168.219.105:${PORT}`);
 });
