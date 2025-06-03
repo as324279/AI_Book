@@ -14,6 +14,28 @@ import {
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import app from '../../firebase/firebase.client';
 
+const ALADIN_API_KEY = 'ttbas3242751932001';
+
+const fetchCategoryFromAladin = async (isbn13) => {
+  try {
+    const url = `https://www.aladin.co.kr/ttb/api/ItemLookUp.aspx?ttbkey=${ALADIN_API_KEY}&itemIdType=ISBN13&ItemId=${isbn13}&Output=JS&Version=20131101`;
+    const response = await fetch(url);
+    const text = await response.text();
+    const json = JSON.parse(text.replace(/^[^=]+ = /, '').replace(/;$/, ''));
+
+     if (!json || !json.item || json.item.length === 0) {
+      console.warn(`📌 Aladin API 응답 이상: isbn13 = ${isbn13}`, json);
+      return '정보 없음';
+    }
+
+    const item = json.item?.[0];
+    return item?.categoryName || '정보 없음';
+  } catch (err) {
+    console.error('📌 Aladin API 카테고리 fetch 실패:', err);
+    return '정보 없음';
+  }
+};
+
 const BookDetail = () => {
   const router = useRouter();
   const params = useLocalSearchParams();
@@ -27,7 +49,23 @@ const BookDetail = () => {
     publisher = '정보 없음',
     publishedDate = '정보 없음',
     description = '요약 없음',
+    summary = "요약 없음",
+    categoryName,
+    isbn13 = '',
   } = params;
+
+  const [finalCategory, setFinalCategory] = React.useState(categoryName || '정보 없음');
+  React.useEffect(() => {
+    console.log("✅ isbn13 in BookDetail params:", isbn13); 
+    console.log("✅ categoryName in BookDetail params:", categoryName);
+    const fetchCategory = async () => {
+      if ((!categoryName || categoryName === '정보 없음') && isbn13) {
+        const fetched = await fetchCategoryFromAladin(isbn13);
+        setFinalCategory(fetched);
+      }
+    };
+    fetchCategory();
+  }, []);
 
   // 중복 체크 후 도서 저장 함수
   const saveToLibrary = async () => {
@@ -67,6 +105,8 @@ const BookDetail = () => {
         publisher,
         publishedDate,
         description,
+        isbn13,
+        categoryName: finalCategory || '정보 없음',
         savedAt: new Date().toISOString()
       };
 
@@ -130,7 +170,8 @@ const BookDetail = () => {
             <Text>저자: {authors}</Text>
             <Text>출판사: {publisher}</Text>
             <Text>출판년도: {publishedDate}</Text>
-            <Text>개요: {description}</Text>
+            // <Text>개요: {description}</Text>
+            <Text>개요: {summary}</Text>
           </View>
         </View>
         {!isAlreadySaved && (
