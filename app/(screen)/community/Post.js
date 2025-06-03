@@ -25,6 +25,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import CustomHeader from "../../../components/CustomHeader";
 import app from "../../../firebase/firebase.client";
+import KeyboardAvoidingWrapper from '../../../components/KeyboardAvoidingWrapper';
+
 
 // 날짜 포맷 함수
 function formatDate(ts) {
@@ -216,6 +218,7 @@ const PostDetailScreen = () => {
         title={`${post?.category || "게시글"}게시판`}
         showIcons={false}
       />
+      <KeyboardAvoidingWrapper>
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.postHeader}>
           <MaterialIcons name="person" size={20} color="#C4A484" />
@@ -299,6 +302,7 @@ const PostDetailScreen = () => {
           <MaterialIcons name="send" size={24} color="#6B4B39" />
         </Pressable>
       </View>
+      </KeyboardAvoidingWrapper>
     </SafeAreaView>
   );
 };

@@ -6,6 +6,7 @@ import { ActivityIndicator, Alert, BackHandler, Pressable, ScrollView, StyleShee
 import { SafeAreaView } from "react-native-safe-area-context";
 import CustomHeader from '../../../components/CustomHeader';
 import app from "../../../firebase/firebase.client";
+import KeyboardAvoidingWrapper from '../../../components/KeyboardAvoidingWrapper';
 
 const Challenge = () => {
   const router = useRouter();
@@ -136,6 +137,8 @@ const Challenge = () => {
     <SafeAreaView style={styles.safeArea}>
       <CustomHeader showBack title="챌린지 결과" showIcons={false} />
       {/* [스크롤뷰 추가] */}
+      <KeyboardAvoidingWrapper>
+      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled"></ScrollView>
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         <Text style={styles.sectionTitle}>{level || challengeInfo?.level || '챌린지'} 난이도</Text>
         <View style={{ marginTop: 30 }}>
@@ -189,7 +192,7 @@ const Challenge = () => {
           </View>
         )}
       </ScrollView>
-      {/* [스크롤뷰 추가 끝] */}
+      </KeyboardAvoidingWrapper>
     </SafeAreaView>
   );
 };

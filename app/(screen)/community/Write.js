@@ -9,6 +9,7 @@ import { Alert, BackHandler, Image, Pressable, ScrollView, StyleSheet, Text, Tex
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import CustomHeader from '../../../components/CustomHeader';
+import KeyboardAvoidingWrapper from '../../../components/KeyboardAvoidingWrapper';
 import app from "../../../firebase/firebase.client";
 
 const WritePostScreen = ()=> {
@@ -129,7 +130,8 @@ const pickImage = async () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <CustomHeader title="게시글 작성" />
+      <CustomHeader showBack title="게시글 작성" showIcons={false} />
+      <KeyboardAvoidingWrapper>
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.categoryContainer}>
           {categories.map((cat) => (
@@ -202,6 +204,7 @@ const pickImage = async () => {
           </Pressable>
         </View>
       </ScrollView>
+      </KeyboardAvoidingWrapper>
     </SafeAreaView>
   );
 };
