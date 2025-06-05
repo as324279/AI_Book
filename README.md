@@ -46,9 +46,9 @@
 
 ```
 📦bookmark-app/
- ┣ 📁app/                  # React Native 앱 소스
+ ┣ 📁myBookApp/            # React Native 앱 소스
  ┣ 📁vision-backend/       # Express.js 백엔드 서버
- ┣ 📁flask/                # 추천 시스템용 Flask 서버
+ ┣ 📁python-backend/       # 추천 시스템용 Flask 서버
  ┣ 📄README.md
  ┣ 📄package.json
  
